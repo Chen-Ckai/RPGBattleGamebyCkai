@@ -1,0 +1,34 @@
+Abstract:
+2 players will be taking turns to perform action with the end goal of defeating their opponent. 
+
+Each player begins with 1000 health. When a player's health reaches 0, they die, and the win is granted to the other player.
+
+Player 1 begins with 500 gold and player 2, due to being at a disadvantage for starting second, begins with 550 gold. (You are allowed to change the values of gold and HP based on your vision of game balancing)
+
+Players gain gold passively during “attack” and “defend” turns, or can gain extra gold by using the rest action.
+
+You are free to change the stats of the weapons and defense equipment, and name them anything you like.
+
+There should be 10 weapons in total, and 10 defenses in total. I gave you a sample example at the end of this document. You are free to use that.
+
+
+
+
+
+
+
+
+
+4 types of action: 
+
+Attack: Provided the player has a weapon, the attack action gives the player the option to attack an opponent.(Each weapon has its own damage, cooldown, hitchance, and cost.) If the player chooses the attack option, your game should display a list of available weapons for that player. (If no weapon is available, your game should send them back to the main menu and ask them to choose a new action.) After displaying the weapons, your game should let the user choose the weapon and attack. The attack deals the damage to the other player based on the weapon damage. However, based on the hitchance of the weapon, you may miss the attack. The hit chance is an integer value. Basically, every time you attack, you randomize a number between 0 and your hitchance. If the number is 3 or smaller, you hit, else, you miss. 
+
+
+Defend: Provided the player has a defense, the defend action gives the player the option to equip an defensive item by choosing one of the purchased items.(Each defense has its own hitpoints, damage deduction, and cost.) Damage deduction works by reducing the income damage by a percentage. For example, 0.3 damage deduction means you are only taking 30% of the income damage. Each player can only have 1 defensive item active at one time. Equipping a new defense will replace the old one. After a defensive item’s hit points reduces to 0, the item is still considered equipped, and the damage deduction value should still work.
+
+
+Purchase: Provided the player has enough gold, the purchase action allows a player to acquire new weapons and defenses. The purchase action should allow players to choose whether they want to purchase a weapon or defense. Then based on their selection, the game should display a table of options with all the stats in a neat and clean format.
+
+
+
+Rest: The rest option gives the player 150 gold, but it increases by 50 gold for every consecutively rested turn.(For example, the first turn player 1 rests, he gains 150 gold. Next turn he rests again, he gains 200 gold. After that, he rests again, he gains 250 gold…
