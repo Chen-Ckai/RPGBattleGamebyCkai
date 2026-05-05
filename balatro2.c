@@ -57,7 +57,7 @@ struct Defence DefColl[10] = { //All mentions of DefColl in the code refer to th
     {"Kinetic", "Gravitational Refractor", 1000, 0.5, 1100},
     {"Kinetic", "Hyper Array", 1000, 0.8, 800},
     {"Kinetic", "Pulsing Array", 500, 0.9, 500},
-    {"Melee", "Zero-point Armor", 300, 0.3, 1100},
+    {"Melee", "Zero-point Armor", 300, 0.3, 1000},
     {"Melee", "Power Armor", 300, 0.4, 800},
     {"Melee", "Space Armor", 200, 0.6, 500},
     {"Mystic", "Dimensional Lens", 500, 0.2, 800}  
