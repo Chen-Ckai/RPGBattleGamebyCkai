@@ -22,7 +22,7 @@ struct Weapon{
     int cooldown;
     float cost;
     int hitchance;
-};
+}; //6 attributes
 
 struct Defence{
     char type[40];
@@ -30,24 +30,24 @@ struct Defence{
     float hitpoints;
     float DamageDeduction;
     float cost;
-};
+}; //5 attributes
 
 struct Player players[2] = { //Each player requires the following attributes: name, HP, gold, consecutive rest turns, owned weapons, owned defences, equipped defence index, and defence HP.
         {"Player 1", 1000, 500, 0, {false}, {false}, -1, 0},
         {"Player 2", 1000, 500, 0, {false}, {false}, -1, 0}
 };
 
-struct Weapon WColl[10] = {
-    {"Energy", "Tachyon Lance", 3000, 20, 1500, 50}, 
+struct Weapon WColl[10] = { //Mentions of WColl in the code refer to this array of weapons
+    {"Energy", "Tachyon Lance", 3000, 20, 1500, 75}, 
     {"Energy", "Plasma Lanucher", 400, 2, 700, 100},
     {"Energy", "Zip Zap", 50, 1, 500, 100},
     {"Kinetic", "Gauss Canon", 1000, 5, 1500, 50}, 
     {"Kinetic", "Cabine Gun", 300, 1, 1000, 100},
     {"Kinetic", "Hand Gun", 100, 2, 500, 100},
-    {"Melee", "Dark Saber", 2000, 5, 1000, 50},
+    {"Melee", "Dark Saber", 2000, 5, 1000, 90},
     {"Melee", "Plasma Knife", 300, 2, 500, 100},
-    {"Melee", "Reaper's Scythe", 1500, 5, 800, 50},
-    {"Mystic", "Aetherophasic Engine", 2000, 1, 800, 50}
+    {"Melee", "Reaper's Scythe", 1500, 5, 800, 95},
+    {"Mystic", "Aetherophasic Engine", 2000, 1, 800, 85}
 };
 
 struct Defence DefColl[10] = { //All mentions of DefColl in the code refer to this array of defences
@@ -71,7 +71,7 @@ void clear(){ //Clear Terminal, purely cosmetic
     printf("\e[1;1H\e[2J");
 }
 
-int ATK(int p){
+int ATK(int p){ //Attack enemy function, takes in player index as parameter
     printf("Attacking enemy. They currently have %.0f HP.\n", players[1 - p].HP);
     printf("Choose a weapon:\n");
     for(int i = 0; i < 10; i++){
@@ -81,31 +81,45 @@ int ATK(int p){
     }
     int choice;
     scanf("%i", &choice);
-    if (choice > 10 || choice < 1 || !players[p].owned_weapons[choice - 1]) { //Invalid input
+    choice -= 1;
+    if (choice > 9 || choice < 0 || !players[p].owned_weapons[choice]) { //Invalid input
         printf("Invalid weapon choice. Returning to menu.\n");
         return -1;
     } else {
-        if (Ran_100() <= WColl[choice - 1].hitchance) {
-            float damage = WColl[choice - 1].damage;
+        bool has_def = false;
+        if (Ran_100() <= WColl[choice].hitchance) {
+            float dmg = WColl[choice].damage;
             if (players[1 - p].equipped_defence != -1) { //Check if enemy has def equip
-                damage *= (1 - DefColl[players[1 - p].equipped_defence].DamageDeduction);
-                printf("%f", damage);
+                dmg *= (1 - DefColl[players[1 - p].equipped_defence].DamageDeduction);
+                float def_dmg = WColl[choice].damage - dmg; //Calculate damage to defence
+                players[1 - p].defence_hp -= def_dmg; //Apply damage to equipped defence
+                has_def = true;
             }
-            players[1 - p].HP -= damage;
-            printf("Hit! Dealt %.0f damage.\n", damage);
+            players[1 - p].HP -= dmg;
+            printf("Hit! Dealt %.0f damage to opponent.\n", dmg);
         } else {
             printf("Missed!\n");
         }
+        if (has_def){
+            if (players[1 - p].defence_hp <= 0){ //Check if defence is broken
+                printf("Your enemy's %s was broken!\n", DefColl[players[1 - p].equipped_defence].name);
+                players[1 - p].equipped_defence = -1;
+                players[1 - p].defence_hp = 0;
+            }
+            else{
+                printf("Your enemy's %s has %.0f HP left.\n", DefColl[players[1 - p].equipped_defence].name, players[1 - p].defence_hp);
+            }
+        }
+        printf("Your enemy now has %.0f HP.\n", players[1 - p].HP);
     }
-    printf("Your enemy now has %.0f HP.\n", players[1 - p].HP);
 }
 
-int DEF(int p){
+int DEF(int p){ //Equip defence function, takes in player index as parameter
     bool has_def = false;
     for (int i = 0; i < 10; i++){
         if (players[p].owned_defences[i]) {
             has_def = true;
-            printf("Defence ID: %i. %s (Hitpoints: %.0f, Damage Deduction: %.0f%%)\n", i + 1, DefColl[i].name, DefColl[i].hitpoints, DefColl[i].DamageDeduction * 100);
+            printf("Defence ID: %i. %s (Remaining HP: %.0f, Damage Deduction: %.0f%%)\n", i + 1, DefColl[i].name, players[p].defence_hp, DefColl[i].DamageDeduction * 100);
         }
     }
     if (!has_def) {
@@ -115,18 +129,19 @@ int DEF(int p){
         printf("Please enter the ID of the defence you want to equip:\n");
         int d_choice;
         scanf("%i", &d_choice);
-        if (d_choice > 10 || d_choice < 1 || !players[p].owned_defences[d_choice - 1]) { //Invalid input
+        d_choice = d_choice - 1; //Adjust for 0 indexing
+        if (d_choice > 9 || d_choice < 0 || !players[p].owned_defences[d_choice]) { //Invalid input
             printf("Invalid defence choice. Returning to menu.\n");
             return -1;
         } else{
-            players[p].equipped_defence = d_choice - 1;
-            players[p].defence_hp = DefColl[d_choice - 1].hitpoints;
-            printf("Equipped %s!\n", DefColl[d_choice - 1].name);
+            players[p].equipped_defence = d_choice;
+            players[p].defence_hp = DefColl[d_choice].hitpoints;
+            printf("Equipped %s!\n", DefColl[d_choice].name);
         }
     }
 }
 
-int SHOP(int p){
+int SHOP(int p){ //Shop function, takes in player index as parameter
     printf("What kind of item would you like to buy? (1. Weapon, 2. Defence)\n");
     int item_type;
     scanf("%i", &item_type);
@@ -185,7 +200,7 @@ int SHOP(int p){
             return -1;
     }
 }
-int REST(int p){
+int REST(int p){ //Rest function, takes in player index as parameter
     printf("Would you like to rest? (y/n)\n");
     char rest_choice;
     scanf(" %c", &rest_choice);
@@ -201,17 +216,17 @@ int REST(int p){
     }
 }
 
-void DISSTATS(int p){
+void DISSTATS(int p){ //Display stats function, takes in player index as parameter
     printf("Player %i's stats:\n", p + 1);
     printf("HP: %.0f\n", players[p].HP);
     printf("Gold: %i\n", players[p].gold);
-    printf("Owned Weapons:\n");
+    printf("Owned Weapons:\n\n");
     for (int i = 0; i < 10; i++){
         if (players[p].owned_weapons[i]){
             printf("%s\n", WColl[i].name);
         }
     }
-    printf("Owned Defences:\n");
+    printf("Owned Defences:\n\n");
     for (int i = 0; i < 10; i++){
         if (players[p].owned_defences[i]){
             printf("%s\n", DefColl[i].name);
@@ -220,7 +235,7 @@ void DISSTATS(int p){
 }
 
 //main program
-int main(){
+int main(){ //Main program loop
     srand(time(NULL));
     int p = 0;
     int opp = 1;
