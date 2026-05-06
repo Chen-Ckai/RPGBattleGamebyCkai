@@ -232,6 +232,9 @@ void DISSTATS(int p){ //Display stats function, takes in player index as paramet
             printf("%s\n", DefColl[i].name);
         }
     }
+    printf("\nPress enter to continue\n");
+    getchar();
+    clear();
 }
 
 //main program
@@ -243,6 +246,7 @@ int main(){ //Main program loop
     printf("Would you like to view the user's manual? (y/n)\n");
     char manual_choice;
     scanf(" %c", &manual_choice);
+    getchar(); //Consume newline character left in buffer
     if (manual_choice == 'y') {
         printf("User's Manual:\n");
         printf("There are 5 actions you can take on your turn:\n");
@@ -252,20 +256,21 @@ int main(){ //Main program loop
         printf("4. Rest: Regain some gold by resting. You gain a bonus for resting consecutive turns.\n");
         printf("5. Display Stats: View your current stats and inventory.\n");
         printf("Also note: entering -1 at any menu will return you to the main menu, allowing you to choose a different action.\n");
-        printf("\nPress enter to continue\n");
-        getchar();
     }
     else{
         printf("get on with it then\n");
-        clear();
     }
+    printf("\nPress enter to continue\n");
+    getchar();
+    clear();
     while(players[0].HP > 0 && players[1].HP > 0){
+        getchar();
         printf("Player %i's turn\n", p + 1);
         DISSTATS(p);
-        printf("Actions:\n\n1. Attack\n2. Defend\n3. Purchase\n4. Rest\n 5. Display Stats\n");
+        printf("Actions:\n\n1. Attack\n2. Defend\n3. Purchase\n4. Rest\n5. Display Stats\n");
         int action;
         scanf("%i", &action);
-        
+        clear();
         switch(action){ // a switch case is an easier and cleaner if else chain
             case 1:
                 players[p].consecutive_rest = 0; //Reset consecutive rest counter when not resting
