@@ -67,7 +67,7 @@ struct Defence DefColl[10] = { //All mentions of DefColl in the code refer to th
     {"Mystic", "Dimensional Lens", 500, 0.2, 800}  
 };
 
-int Ran_100(){ //Random generation for chance based items
+int Ran_100(){ //Random generation for all chance mechanics
     return rand() % 100 + 1;
 }
 
@@ -97,8 +97,8 @@ int ATK(int p){ //Attack enemy function, takes in player index as parameter
     printf("Attacking enemy. They currently have %.0f HP.\n", players[1 - p].HP);
     printf("Choose a weapon:\n");
     for (int i = 0; i < players[p].owned_weapon_count; i++) {
-        struct Weapon *w = &players[p].owned_weapons[i];
-        printf("Weapon ID: %i. %s (Damage: %.0f, Cooldown: %i, Hit Chance: %i%%)\n", i + 1, w->name, w->damage, w->cooldown, w->hitchance);
+        struct Weapon w = players[p].owned_weapons[i];
+        printf("Weapon ID: %i. %s (Damage: %.0f, Cooldown: %i, Hit Chance: %i%%)\n", i + 1, w.name, w.damage, w.cooldown, w.hitchance);
     }
     int choice;
     scanf("%i", &choice);
@@ -107,14 +107,14 @@ int ATK(int p){ //Attack enemy function, takes in player index as parameter
         printf("Invalid weapon choice. Returning to menu.\n");
         return -1;
     } else {
-        struct Weapon *weapon = &players[p].owned_weapons[choice];
+        struct Weapon w = players[p].owned_weapons[choice];
         bool has_def = false;
-        if (Ran_100() <= weapon->hitchance) {
-            float dmg = weapon->damage;
+        if (Ran_100() <= w.hitchance) {
+            float dmg = w.damage;
             if (players[1 - p].equipped_defence != -1) { //Check if enemy has def equip
                 struct Defence *enemy_def = &players[1 - p].owned_defences[players[1 - p].equipped_defence];
                 dmg *= (1 - enemy_def->DamageDeduction);
-                float def_dmg = weapon->damage - dmg; //Calculate damage to defence
+                float def_dmg = w.damage - dmg; //Calculate damage to defence
                 players[1 - p].defence_hp -= def_dmg; //Apply damage to equipped defence
                 has_def = true;
             }
