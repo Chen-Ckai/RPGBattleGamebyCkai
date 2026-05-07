@@ -96,7 +96,7 @@ int ATK(int p){ //Attack enemy function, takes in player index as parameter
                 has_def = true;
             }
             players[1 - p].HP -= dmg;
-            printf("Hit! Dealt %.0f damage to opponent.\n", dmg);
+            printf("Hit! Dealt %.0g damage to opponent.\n", dmg);
         } else {
             printf("Missed!\n");
         }
@@ -107,10 +107,10 @@ int ATK(int p){ //Attack enemy function, takes in player index as parameter
                 players[1 - p].defence_hp = 0;
             }
             else{
-                printf("Your enemy's %s has %.0f HP left.\n", DefColl[players[1 - p].equipped_defence].name, players[1 - p].defence_hp);
+                printf("Your enemy's %s has %.0g HP left.\n", DefColl[players[1 - p].equipped_defence].name, players[1 - p].defence_hp);
             }
         }
-        printf("Your enemy now has %.0f HP.\n", players[1 - p].HP);
+        printf("Your enemy now has %.0g HP.\n", players[1 - p].HP);
     }
 }
 
@@ -119,7 +119,7 @@ int DEF(int p){ //Equip defence function, takes in player index as parameter
     for (int i = 0; i < 10; i++){
         if (players[p].owned_defences[i]) {
             has_def = true;
-            printf("Defence ID: %i. %s (Remaining HP: %.0f, Damage Deduction: %.0f%%)\n", i + 1, DefColl[i].name, players[p].defence_hp, DefColl[i].DamageDeduction * 100);
+            printf("Defence ID: %i. %s (Remaining HP: %.0g, Damage Deduction: %.0g%%)\n", i + 1, DefColl[i].name, players[p].defence_hp, DefColl[i].DamageDeduction * 100);
         }
     }
     if (!has_def) {
@@ -155,7 +155,7 @@ int SHOP(int p){ //Shop function, takes in player index as parameter
             printf("Available weapons:\n");
             for(int i = 0; i < 10; i++){
                 if(!players[p].owned_weapons[i]){ //Only show weapons that the player doesn't already own
-                    printf("Weapon ID: %i. %s (Damage: %.0f, Cooldown: %i, Hit Chance: %i%%, Cost: %.0f)\n", i + 1, WColl[i].name, WColl[i].damage, WColl[i].cooldown, WColl[i].hitchance, WColl[i].cost);
+                    printf("Weapon ID: %i. %s (Damage: %.0g, Cooldown: %i, Hit Chance: %i%%, Cost: %.0g)\n", i + 1, WColl[i].name, WColl[i].damage, WColl[i].cooldown, WColl[i].hitchance, WColl[i].cost);
                 }
             }
             printf("Please enter the ID of the weapon you wish to purchase:\n");
@@ -177,7 +177,7 @@ int SHOP(int p){ //Shop function, takes in player index as parameter
             printf("Available defences:\n");
             for(int i = 0; i < 10; i++){
                 if(!players[p].owned_defences[i]){ //Only show defences that the player doesn't already own
-                    printf("Defence ID: %i. %s (Hitpoints: %.0f, Damage Deduction: %.0f%%, Cost: %.0f)\n", i + 1, DefColl[i].name, DefColl[i].hitpoints, DefColl[i].DamageDeduction * 100, DefColl[i].cost);
+                    printf("Defence ID: %i. %s (Hitpoints: %.0g, Damage Deduction: %.0g%%, Cost: %.0g)\n", i + 1, DefColl[i].name, DefColl[i].hitpoints, DefColl[i].DamageDeduction * 100, DefColl[i].cost);
                 }
             }
             printf("Please enter the ID of the defence you wish to purchase:\n");
@@ -218,7 +218,7 @@ int REST(int p){ //Rest function, takes in player index as parameter
 
 void DISSTATS(int p){ //Display stats function, takes in player index as parameter
     printf("Player %i's stats:\n", p + 1);
-    printf("HP: %.0f\n", players[p].HP);
+    printf("HP: %.0g\n", players[p].HP);
     printf("Gold: %i\n", players[p].gold);
     printf("Owned Weapons:\n\n");
     for (int i = 0; i < 10; i++){
