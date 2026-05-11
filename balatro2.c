@@ -247,7 +247,7 @@ void DISSTATS(int p){ //Display stats function, takes in player index as paramet
     printf("Equipped Defence: ");
     if (players[p].equipped_defence != -1) {
         printf("%s\n", players[p].owned_defences[players[p].equipped_defence].name);
-    } else {
+    } else { 
         printf("None\n");
     }
     printf("Owned Weapons:\n\n");
