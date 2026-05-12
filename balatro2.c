@@ -75,6 +75,45 @@ void clear(){ //Clear Terminal, purely cosmetic
     printf("\e[1;1H\e[2J");
 }
 
+void DISSTATS(int p){ //Display stats function, takes in player index as parameter
+    printf("Player %i's stats:\n", p + 1);
+    printf("HP: %.0f\n", players[p].HP);
+    printf("Gold: %i\n", players[p].gold);
+    printf("Equipped Defence: ");
+    if (players[p].equipped_defence != -1) {
+        printf("%s\n", players[p].owned_defences[players[p].equipped_defence].name);
+    } else { 
+        printf("None\n");
+    }
+    printf("Owned Weapons:\n\n");
+    for (int i = 0; i < players[p].owned_weapon_count; i++){
+        printf("%s\n", players[p].owned_weapons[i].name);
+    }
+    printf("Owned Defences:\n\n");
+    for (int i = 0; i < players[p].owned_defence_count; i++){
+        printf("%s\n", players[p].owned_defences[i].name);
+    }
+    printf("\nPress enter to continue\n");
+    getchar();
+    clear();
+}
+
+void DISATK(int owned, int p){ //Display attack options, takes in player index and whether to display owned or unowned weapons as parameters
+    if (owned){
+        for (int i = 0; i < players[p].owned_weapon_count; i++) {
+            struct Weapon w = players[p].owned_weapons[i];
+            printf("Weapon ID: %i. %s (Damage: %.0f, Cooldown: %i, Hit Chance: %i%%)\n", i + 1, w.name, w.damage, w.cooldown, w.hitchance);
+        }
+    }
+    else{
+        for (int i = 0; i < 10; i++){
+            if(!player_has_weapon(p, i)){
+                printf("Weapon ID: %i. %s (Damage: %.0f, Cooldown: %i, Hit Chance: %i%%, Cost: %.0f)\n", i + 1, WColl[i].name, WColl[i].damage, WColl[i].cooldown, WColl[i].hitchance, WColl[i].cost);
+            }
+        }
+    }
+}
+
 bool player_has_weapon(int p, int w_idx) {
     for (int i = 0; i < players[p].owned_weapon_count; i++) {
         if (strcmp(players[p].owned_weapons[i].name, WColl[w_idx].name) == 0) {
@@ -238,29 +277,6 @@ int REST(int p){ //Rest function, takes in player index as parameter
     }
     printf("\nPress enter to continue\n");
     getchar();
-}
-
-void DISSTATS(int p){ //Display stats function, takes in player index as parameter
-    printf("Player %i's stats:\n", p + 1);
-    printf("HP: %.0f\n", players[p].HP);
-    printf("Gold: %i\n", players[p].gold);
-    printf("Equipped Defence: ");
-    if (players[p].equipped_defence != -1) {
-        printf("%s\n", players[p].owned_defences[players[p].equipped_defence].name);
-    } else { 
-        printf("None\n");
-    }
-    printf("Owned Weapons:\n\n");
-    for (int i = 0; i < players[p].owned_weapon_count; i++){
-        printf("%s\n", players[p].owned_weapons[i].name);
-    }
-    printf("Owned Defences:\n\n");
-    for (int i = 0; i < players[p].owned_defence_count; i++){
-        printf("%s\n", players[p].owned_defences[i].name);
-    }
-    printf("\nPress enter to continue\n");
-    getchar();
-    clear();
 }
 
 //main program
