@@ -31,13 +31,12 @@ struct Player{
     int consecutive_rest;
     struct Weapon owned_weapons[10];
     struct Defence owned_defences[10];
-    int equipped_defence;
-    float defence_hp;
+    struct Defence equipped_defence;
 };
 
 struct Player players[2] = {
-        {"Player 1", 1000, 5000000, 0, {{0}}, {{0}}, -1, 0},
-        {"Player 2", 1000, 500000, 0, {{0}}, {{0}}, -1, 0}
+        {"Player 1", 1000, 5000000, 0, {0}, {0}, {0}},
+        {"Player 2", 1000, 500000, 0, {0}, {0}, {0}}
 };
 
 struct Weapon WColl[10] = { //Mentions of WColl in the code refer to this array of weapons
@@ -75,12 +74,15 @@ void Clear(){ //Clear Terminal, purely cosmetic
 }
 
 int ATK(int p, int opp){ //Attack enemy function, takes in player index and opponent index as parameters
-    printf("Attacking enemy. They currently have %.0g HP.\n", players[opp].HP);
+    printf("Attacking enemy. They currently have %g HP.\n", players[opp].HP);
     printf("Owned weapons:\n");
     printf("%-10s%-25s%-20s%-20s%-20s\n", "ID", "Name", "Damage", "Cooldown", "Hit Chance");
     for (int i = 0; i < 10; i++) {
         struct Weapon w = players[p].owned_weapons[i];
-        printf("%-10i%-25s%-20.0f%-20i%-20i%%\n", w.id, w.name, w.damage, w.cooldown, w.hitchance);
+        if (w.id == 0) { //Only display weapons the player owns
+            continue;
+        }
+        printf("%-10i%-25s%-20.0f%-20i%i%%\n", w.id, w.name, w.damage, w.cooldown, w.hitchance);
     }
     printf("Enter a weapon's ID to attack with it:\n\n");
     int choice;
@@ -95,35 +97,64 @@ int ATK(int p, int opp){ //Attack enemy function, takes in player index and oppo
         printf("Invalid weapon choice. Returning to menu.\n\n");
         return -1;
     } else {
-        struct Weapon w = players[p].owned_weapons[choice - 1];
-        bool has_def = false;
-        if (Ran_100() >= w.hitchance) {
-            float dmg = w.damage;
-            if (players[opp].equipped_defence != -1) { //Check if enemy has def equip
-                struct Defence enemy_def = players[opp].owned_defences[players[opp].equipped_defence];
-                dmg *= (1 - enemy_def.DamageDeduction);
-                float def_dmg = w.damage - dmg; //Calculate damage to defence
-                players[opp].defence_hp -= def_dmg; //Apply damage to equipped defence
-                has_def = true;
-            }
+        choice--; //Adjust for 0 indexing
+        bool has_def;
+        float dmg = players[p].owned_weapons[choice].damage;
+        float def_dmg = dmg * players[opp].equipped_defence.DamageDeduction;
+        if (players[opp].equipped_defence.id != 0){
+            has_def = true;
+            dmg *= (1 - players[opp].equipped_defence.DamageDeduction);
+        }
+        else {
+            has_def = false;
+        }
+        if (Ran_100() >= players[p].owned_weapons[choice].hitchance) {
+            Clear();
+            printf("A swing and a miss.\n\n");
+        }
+        else {
             players[opp].HP -= dmg;
             Clear();
-            printf("Hit! Dealt %.0f damage to opponent.\n", dmg);
-            if (has_def) {
-                if (players[opp].defence_hp <= 0){ //Check if defence is broken
-                    printf("Your opponent's %s was broken!\n", players[opp].owned_defences[players[opp].equipped_defence].name);
-                    players[opp].equipped_defence = -1;
-                    players[opp].defence_hp = 0;
+            printf("Your attack hit! You dealt %g damage to your opponent. They have %g HP remaining.\n\n", dmg, players[opp].HP);
+            if (has_def){
+                players[opp].equipped_defence.hitpoints -= def_dmg;
+                if (players[opp].equipped_defence.hitpoints <= 0){
+                    printf("Your opponent's equipped defence broke!\n\n");
+                    players[opp].equipped_defence = (struct Defence){0}; //Reset equipped defence
                 }
-                else{
-                    printf("Your opponent's %s has %.0f HP left.\n", players[opp].owned_defences[players[opp].equipped_defence].name, players[opp].defence_hp);
+                else {
+                    printf("Your opponent's equipped defence took %g damage. It has %g hit points remaining.\n\n", def_dmg, players[opp].equipped_defence.hitpoints);
                 }
-                printf("Your opponent's defence absorbed %.0f damage and has %.0f HP remaining.\n", w.damage - dmg, players[opp].defence_hp);
             }
-        } else {
-            Clear();
-            printf("Miss! Your attack did not connect with the enemy.\n");
         }
+    }
+}
+
+int DEF(int p, int opp){
+    printf("Equipping defence. You currently have %g HP.\n", players[p].HP);
+    printf("Owned defences:\n\n");
+    printf("%-10s%-25s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction");
+    for (int i = 0; i < 10; i++) {
+        struct Defence d = players[p].owned_defences[i];
+        printf("%-10i%-25s%-20g%-20.1f\n", d.id, d.name, d.hitpoints, d.DamageDeduction);
+    }
+    printf("Enter a defence's ID to equip it:\n\n");
+    int choice;
+    scanf("%i", &choice);
+    if (choice == -1){
+        Clear();
+        printf("Exit code entered. Returning to menu.\n\n");
+        return -1;
+    }
+    else if (choice > 10 || choice < 1) { //Invalid input
+        Clear();
+        printf("Invalid defence choice. Returning to menu.\n\n");
+        return -1;
+    } else {
+        struct Defence placeholder = players[p].owned_defences[choice - 1];
+        players[p].owned_defences[choice - 1] = players[p].equipped_defence;        //Switch equipped defence with chosen
+        players[p].equipped_defence = placeholder;
+        printf("Equipped %s!\n", players[p].equipped_defence.name);
     }
 }
 
@@ -150,7 +181,7 @@ int SHOP(int p, int opp){
                 for (int i = 0; i < 10; i++) {
                     if (players[p].owned_weapons[i].id == 0) { //Only display weapons the player doesn't already own
                         struct Weapon w = WColl[i];
-                        printf("%-10i%-25s%-20.0f%-20i%-20i%i\n", w.id, w.name, w.damage, w.cooldown, w.hitchance, w.cost);
+                        printf("%-10i%-25s%-20g%-20i%-20i%i\n", w.id, w.name, w.damage, w.cooldown, w.hitchance, w.cost);
                     }
                 }
                 printf("Please enter the ID of the weapon you wish to purchase:\n");
@@ -171,6 +202,7 @@ int SHOP(int p, int opp){
                     printf("You don't have enough gold to purchase this weapon. Returning to menu.\n");
                     return -1;
                 } else {
+                    Clear();
                     players[p].gold -= WColl[w_choice].cost;
                     players[p].owned_weapons[w_choice] = WColl[w_choice];
                     printf("Purchased %s!\n", WColl[w_choice].name);
@@ -188,7 +220,7 @@ int main(){ //Main program loop
     srand(time(NULL));
     int p = 0;
     int opp = 1;
-    printf("Welcome to Balatro 2\n");
+    printf("Welcome to Generic RPG game\n");
     printf("Would you like to view the user's manual? (y/n)\n");
     char manual_choice;
     scanf(" %c", &manual_choice);
@@ -210,9 +242,7 @@ int main(){ //Main program loop
     printf("\nPress enter to continue\n");
     getchar();
     Clear();
-    
     while (players[0].HP > 0 && players[1].HP > 0){
-        Clear();
         printf("Player %i's turn\n", p + 1);
         printf("Actions:\n\n1. Attack\n2. Defend\n3. Purchase\n4. Rest\n5. Display Stats\n");
         printf("Which action would you like to take? (Enter the corresponding number)\n");
