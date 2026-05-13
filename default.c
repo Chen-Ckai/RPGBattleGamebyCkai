@@ -87,17 +87,17 @@ int ATK(int p, int opp){ //Attack enemy function, takes in player index and oppo
     printf("Enter a weapon's ID to attack with it:\n\n");
     int choice;
     scanf("%i", &choice);
+    choice--; //Adjust for 0 indexing
     if (choice == -1){
         Clear();
         printf("Exit code entered. Returning to menu.\n\n");
         return -1;
     }
-    else if (choice > 10 || choice < 1) { //Invalid input
+    else if (choice > 9 || choice < 0 || players[p].owned_weapons[choice].id == 0) { //Invalid input
         Clear();
         printf("Invalid weapon choice. Returning to menu.\n\n");
         return -1;
     } else {
-        choice--; //Adjust for 0 indexing
         bool has_def;
         float dmg = players[p].owned_weapons[choice].damage;
         float def_dmg = dmg * players[opp].equipped_defence.DamageDeduction;
@@ -128,9 +128,11 @@ int ATK(int p, int opp){ //Attack enemy function, takes in player index and oppo
             }
         }
     }
+    players[p].consecutive_rest = 0; //reset cons rest when doing anything besides resting, only activate after the entire action is done tho in case of changed mind
 }
 
 int DEF(int p, int opp){
+    Clear();
     printf("Equipping defence. You currently have %g HP.\n", players[p].HP);
     printf("Owned defences:\n\n");
     printf("%-10s%-25s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction");
@@ -151,11 +153,13 @@ int DEF(int p, int opp){
         printf("Invalid defence choice. Returning to menu.\n\n");
         return -1;
     } else {
+        Clear();
         struct Defence placeholder = players[p].owned_defences[choice - 1];
         players[p].owned_defences[choice - 1] = players[p].equipped_defence;        //Switch equipped defence with chosen
         players[p].equipped_defence = placeholder;
         printf("Equipped %s!\n", players[p].equipped_defence.name);
     }
+    players[p].consecutive_rest = 0; //reset cons rest when doing anything besides resting, only activate after the entire action is done tho in case of changed mind
 }
 
 int SHOP(int p, int opp){
@@ -163,7 +167,7 @@ int SHOP(int p, int opp){
     printf("Welcome to the shop. What kind of item would you like to buy? (1. Weapon, 2. Defence)\n");
     int item_type;
     scanf("%i", &item_type);
-    if (item_type == -1){
+    if (item_type == 0){
         Clear();
         printf("Exit code entered. Returning to menu.\n");
         return -1;
@@ -188,7 +192,7 @@ int SHOP(int p, int opp){
                 int w_choice;
                 scanf("%i", &w_choice);
                 w_choice--; //Adjust for 0 indexing
-                if (w_choice == -2){
+                if (w_choice == -1){
                     Clear();
                     printf("Exit code entered. Returning to menu.\n");
                     return -1;
@@ -199,7 +203,7 @@ int SHOP(int p, int opp){
                     return -1;
                 } else if (players[p].gold < WColl[w_choice].cost) { //Not enough gold
                     Clear();
-                    printf("You don't have enough gold to purchase this weapon. Returning to menu.\n");
+                    printf("You don't have enough gold to purchase this weapon (too broke). Returning to menu.\n");
                     return -1;
                 } else {
                     Clear();
@@ -209,9 +213,58 @@ int SHOP(int p, int opp){
                 }
                 break;
             case 2:
-                // Handle defence purchase
+                printf("Entered defence shop. Here are the defences available for purchase:\n\n");
+                printf("%-5s%-25s%-20s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction", "Cost");
+                for (int i = 0; i < 10; i++){
+                    if (players[p].owned_defences[i].id == 0){
+                        struct Defence d = players[p].owned_defences[i];
+                        printf("%-5i%-25s%-20g%-20i%-20i\n", d.id, d.name, d.hitpoints, d.DamageDeduction, d.cost);
+                    }
+                }
+                printf("Please enter the ID of the defence you wish to purchase:\n");
+                int d_choice;
+                scanf("%i", d_choice);
+                d_choice--; //Adjust for 0 indexing
+                if (d_choice == -1){
+                    Clear();
+                    printf("Exit code entered. Returning to menu.\n");
+                    return -1;
+                }
+                else if (d_choice > 9 || d_choice < 0 || players[p].owned_weapons[d_choice].id != 0){
+                    Clear();
+                    printf("Invalid defence choice. Returning to menu.\n");
+                    return -1;
+                }
+                else if (players[p].gold < DefColl[d_choice].cost){
+                    Clear();
+                    printf("My friend, you are too broke for this defence item. Returning to menu.\n");
+                    return -1;
+                }
+                else {
+                    Clear();
+                    players[p].equipped_defence = players[p].owned_defences[d_choice];
+                    printf("Equipped %s!\n\n", players[p].equipped_defence.name);
+                }
                 break;
         }
+    }
+}
+
+int REST(int p){
+    printf("Would you like to rest? (y/n)\n");
+    char r_choice;
+    scanf("%c", &r_choice);
+    if (r_choice == 'n'){
+        Clear();
+        printf("ok sure\n\n");
+        return -1;
+    }
+    else{
+        Clear();
+        int gold_gain = 100 + 50 * players[p].consecutive_rest;
+        players[p].consecutive_rest++;
+        printf("You gained %i gold from resting. Consecutive rest count is at %i.", gold_gain, players[p].consecutive_rest++);
+        return -1;
     }
 }
 
@@ -234,7 +287,7 @@ int main(){ //Main program loop
         printf("3. Purchase: Buy new weapons or defences to improve your combat abilities. Note: Bought defence will not be auto-equipped.\n");
         printf("4. Rest: Gain 100 gold by resting. You gain a bonus for resting consecutive turns.\n");
         printf("5. Display Stats: View your current stats and inventory. This will not cost you your turn.\n");
-        printf("Also note: entering -1 at any menu will return you to the main menu, allowing you to choose a different action.\n");
+        printf("Also note: entering 0 at any menu will return you to the main menu, allowing you to choose a different action.\n");
     }
     else{
         printf("get on with it then\n");
@@ -264,17 +317,23 @@ int main(){ //Main program loop
                     break;
                 }
                 else if (ATK(p, opp) == -1){
+                    Clear();
                     continue;
                 }
                 break;
             case 2:
                 break;
             case 3:
+                Clear();
                 if (SHOP(p, opp) == -1){
                     continue;
                 }
                 break;
             case 4:
+                Clear();
+                if (REST == -1){
+                    continue;
+                }
                 break;
             case 5:
                 continue;
