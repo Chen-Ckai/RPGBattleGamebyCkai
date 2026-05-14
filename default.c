@@ -35,8 +35,8 @@ struct Player{
 };
 
 struct Player players[2] = {
-        {"Player 1", 1000, 5000000, 0, {0}, {0}, {0}},
-        {"Player 2", 1000, 500000, 0, {0}, {0}, {0}}
+        {"Player 1", 1000, 1000, 0, {0}, {0}, {0}},
+        {"Player 2", 1000, 1000, 0, {0}, {0}, {0}}
 };
 
 struct Weapon WColl[10] = { //Mentions of WColl in the code refer to this array of weapons
@@ -73,16 +73,33 @@ void Clear(){ //Clear Terminal, purely cosmetic
     printf("\e[1;1H\e[2J");
 }
 
+bool Own_Item(int p, int num, char i_type){
+    if (i_type == 'w'){
+        if (players[p].owned_weapons[num].id == 0){
+            return false;
+        }
+        return true;
+    }
+    else{
+        if (players[p].owned_defences[num].id == 0){
+            return false;
+        }
+        else if (players[p].equipped_defence.id == 0){
+            return false;
+        }
+        return true;
+    }
+}
+
 int ATK(int p, int opp){ //Attack enemy function, takes in player index and opponent index as parameters
     printf("Attacking enemy. They currently have %g HP.\n", players[opp].HP);
     printf("Owned weapons:\n");
     printf("%-10s%-25s%-20s%-20s%-20s\n", "ID", "Name", "Damage", "Cooldown", "Hit Chance");
     for (int i = 0; i < 10; i++) {
-        struct Weapon w = players[p].owned_weapons[i];
-        if (w.id == 0) { //Only display weapons the player owns
-            continue;
+        if (Own_Item(p, i, 'w')) { //Only display weapons the player owns
+            struct Weapon w = players[p].owned_weapons[i];
+            printf("%-10i%-25s%-20.0f%-20i%i%%\n", w.id, w.name, w.damage, w.cooldown, w.hitchance);
         }
-        printf("%-10i%-25s%-20.0f%-20i%i%%\n", w.id, w.name, w.damage, w.cooldown, w.hitchance);
     }
     printf("Enter a weapon's ID to attack with it:\n\n");
     int choice;
@@ -98,15 +115,12 @@ int ATK(int p, int opp){ //Attack enemy function, takes in player index and oppo
         printf("Invalid weapon choice. Returning to menu.\n\n");
         return -1;
     } else {
-        bool has_def;
+        bool has_def = false;
         float dmg = players[p].owned_weapons[choice].damage;
         float def_dmg = dmg * players[opp].equipped_defence.DamageDeduction;
         if (players[opp].equipped_defence.id != 0){
             has_def = true;
             dmg *= (1 - players[opp].equipped_defence.DamageDeduction);
-        }
-        else {
-            has_def = false;
         }
         if (Ran_100() >= players[p].owned_weapons[choice].hitchance) {
             Clear();
@@ -129,6 +143,7 @@ int ATK(int p, int opp){ //Attack enemy function, takes in player index and oppo
         }
     }
     players[p].consecutive_rest = 0; //reset cons rest when doing anything besides resting, only activate after the entire action is done tho in case of changed mind
+    return 0;
 }
 
 int DEF(int p, int opp){
@@ -137,8 +152,10 @@ int DEF(int p, int opp){
     printf("Owned defences:\n\n");
     printf("%-10s%-25s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction");
     for (int i = 0; i < 10; i++) {
-        struct Defence d = players[p].owned_defences[i];
-        printf("%-10i%-25s%-20g%-20.1f\n", d.id, d.name, d.hitpoints, d.DamageDeduction);
+        if (players[p].owned_defences[i].id != 0){
+            struct Defence d = players[p].owned_defences[i];
+            printf("%-10i%-25s%-20g%-20.1f\n", d.id, d.name, d.hitpoints, d.DamageDeduction);
+        }
     }
     printf("Enter a defence's ID to equip it:\n\n");
     int choice;
@@ -148,7 +165,7 @@ int DEF(int p, int opp){
         printf("Exit code entered. Returning to menu.\n\n");
         return -1;
     }
-    else if (choice > 10 || choice < 1) { //Invalid input
+    else if (choice > 10 || choice < 1 || !(Own_Item(p, choice, 'd'))) { //Invalid input
         Clear();
         printf("Invalid defence choice. Returning to menu.\n\n");
         return -1;
@@ -160,6 +177,7 @@ int DEF(int p, int opp){
         printf("Equipped %s!\n", players[p].equipped_defence.name);
     }
     players[p].consecutive_rest = 0; //reset cons rest when doing anything besides resting, only activate after the entire action is done tho in case of changed mind
+    return 0;
 }
 
 int SHOP(int p, int opp){
@@ -178,17 +196,19 @@ int SHOP(int p, int opp){
         return -1;
     }
     else {
+        Clear();
+        printf("You currently have %i gold. \n\n", players[p].gold);
         switch(item_type){
-            case 1:
-                printf("Entered weapon shop. Here are the weapons available for purchase:\n\n");
-                printf("%-10s%-25s%-20s%-20s%-20s%-20s\n", "ID", "Name", "Damage", "Cooldown", "Hit Chance (%)", "Cost");
+            case 1:                            //Weapon shop
+                printf("Here are the weapons available for purchase:\n\n");
+                printf("%-10s%-30s%-20s%-20s%-20s%-20s\n", "ID", "Name", "Damage", "Cooldown", "Hit Chance (%)", "Cost (in gold)");
                 for (int i = 0; i < 10; i++) {
                     if (players[p].owned_weapons[i].id == 0) { //Only display weapons the player doesn't already own
                         struct Weapon w = WColl[i];
-                        printf("%-10i%-25s%-20g%-20i%-20i%i\n", w.id, w.name, w.damage, w.cooldown, w.hitchance, w.cost);
+                        printf("%-10i%-30s%-20g%-20i%-20i%-20i\n", w.id, w.name, w.damage, w.cooldown, w.hitchance, w.cost);
                     }
                 }
-                printf("Please enter the ID of the weapon you wish to purchase:\n");
+                printf("\nPlease enter the ID of the weapon you wish to purchase:\n");
                 int w_choice;
                 scanf("%i", &w_choice);
                 w_choice--; //Adjust for 0 indexing
@@ -212,45 +232,47 @@ int SHOP(int p, int opp){
                     printf("Purchased %s!\n", WColl[w_choice].name);
                 }
                 break;
-            case 2:
-                printf("Entered defence shop. Here are the defences available for purchase:\n\n");
-                printf("%-5s%-25s%-20s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction", "Cost");
+            case 2:                                    //Defence shop
+                printf("Here are the defences available for purchase:\n\n");
+                printf("%-5s%-30s%-20s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction", "Cost (in gold)");
                 for (int i = 0; i < 10; i++){
                     if (players[p].owned_defences[i].id == 0){
-                        struct Defence d = players[p].owned_defences[i];
-                        printf("%-5i%-25s%-20g%-20i%-20i\n", d.id, d.name, d.hitpoints, d.DamageDeduction, d.cost);
+                        struct Defence d = DefColl[i];
+                        printf("%-5i%-30s%-20g%g%%%20i\n", d.id, d.name, d.hitpoints, d.DamageDeduction * 100, d.cost);
                     }
                 }
-                printf("Please enter the ID of the defence you wish to purchase:\n");
+                printf("\nPlease enter the ID of the defence you wish to purchase:\n");
                 int d_choice;
-                scanf("%i", d_choice);
+                scanf("%i", &d_choice);
                 d_choice--; //Adjust for 0 indexing
                 if (d_choice == -1){
                     Clear();
-                    printf("Exit code entered. Returning to menu.\n");
+                    printf("Exit code entered. Returning to menu.\n\n");
                     return -1;
                 }
                 else if (d_choice > 9 || d_choice < 0 || players[p].owned_weapons[d_choice].id != 0){
                     Clear();
-                    printf("Invalid defence choice. Returning to menu.\n");
+                    printf("Invalid defence choice. Returning to menu.\n\n");
                     return -1;
                 }
                 else if (players[p].gold < DefColl[d_choice].cost){
                     Clear();
-                    printf("My friend, you are too broke for this defence item. Returning to menu.\n");
+                    printf("My friend, you are too broke for this defence item. Returning to menu.\n\n");
                     return -1;
                 }
                 else {
                     Clear();
-                    players[p].equipped_defence = players[p].owned_defences[d_choice];
-                    printf("Equipped %s!\n\n", players[p].equipped_defence.name);
+                    players[p].owned_defences[d_choice] = DefColl[d_choice];
+                    printf("Purchased %s!\n\n", DefColl[d_choice].name);
                 }
                 break;
         }
     }
+    return 0;
 }
 
 int REST(int p){
+    getchar(); //Buffer from int main enter press
     printf("Would you like to rest? (y/n)\n");
     char r_choice;
     scanf("%c", &r_choice);
@@ -263,8 +285,22 @@ int REST(int p){
         Clear();
         int gold_gain = 100 + 50 * players[p].consecutive_rest;
         players[p].consecutive_rest++;
-        printf("You gained %i gold from resting. Consecutive rest count is at %i.", gold_gain, players[p].consecutive_rest++);
-        return -1;
+        printf("You gained %i gold from resting. Consecutive rest count is at %i. \n", gold_gain, players[p].consecutive_rest);
+        players[p].gold += gold_gain;
+        printf("You have %i gold in total. \n\n", players[p].gold);
+    }
+    return 0;
+}
+
+void DISSTATS(int p){
+    printf("HP: %g\n", players[p].HP);
+    printf("Gold: %i\n", players[p].gold);
+    printf("Owned Weapons: \n\n");
+    for (int i = 0; i < 10; i++){
+        if (players[p].owned_weapons[i].id != 0){
+            struct Weapon w = players[p].owned_weapons[i];
+            printf("%");
+        }
     }
 }
 
@@ -273,6 +309,7 @@ int main(){ //Main program loop
     srand(time(NULL));
     int p = 0;
     int opp = 1;
+    Clear();
     printf("Welcome to Generic RPG game\n");
     printf("Would you like to view the user's manual? (y/n)\n");
     char manual_choice;
@@ -308,20 +345,34 @@ int main(){ //Main program loop
                 for (int i = 0; i < 10; i++){
                     if (players[p].owned_weapons[i].id != 0){
                         can_atk = true;
-                        continue;
+                        break;
                     }
                 }
                 if (!can_atk) {
                     Clear();
                     printf("You have no weapons to attack with. Please buy one at the shop.\n\n");
-                    break;
+                    continue;
                 }
                 else if (ATK(p, opp) == -1){
-                    Clear();
                     continue;
                 }
                 break;
             case 2:
+                bool can_def = false;
+                for (int i = 0; i < 10; i++){
+                    if (players[p].owned_defences[i].id != 0){
+                        can_def = true;
+                        break;
+                    }
+                }
+                if (!can_def){
+                    Clear();
+                    printf("You have no defences to defend with idiot, buy some in the shop. \n\n");
+                    continue;
+                }
+                else if (DEF(p, opp) == -1){
+                    continue;
+                }
                 break;
             case 3:
                 Clear();
@@ -331,7 +382,7 @@ int main(){ //Main program loop
                 break;
             case 4:
                 Clear();
-                if (REST == -1){
+                if (REST(p) == -1){
                     continue;
                 }
                 break;
