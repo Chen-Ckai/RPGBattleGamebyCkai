@@ -118,6 +118,10 @@ int FullItemPrint(int p, char i_type, bool ownly){
             }
         }
     }
+    return ChoiceCheck(ownly, p, i_type);
+}
+
+int ChoiceCheck(bool ownly, int p, char i_type){
     printf("\nPlease enter the ID of the item you wish to select: \n");
     int choice;
     scanf("%i", &choice);
