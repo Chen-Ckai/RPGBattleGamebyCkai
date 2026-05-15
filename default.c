@@ -74,21 +74,21 @@ void Clear(){ //Clear Terminal, purely cosmetic
 }
 
 bool Own_Item(int p, int num, char i_type){
+    bool do_u_have_it = false;
     if (i_type == 'w'){
-        if (players[p].owned_weapons[num].id == 0){
-            return false;
+        if (players[p].owned_weapons[num].id != 0){
+            do_u_have_it = true;
         }
-        return true;
     }
     else{
-        if (players[p].owned_defences[num].id == 0){
-            return false;
+        if (players[p].equipped_defence.id != 0){
+            do_u_have_it = true;
         }
-        else if (players[p].equipped_defence.id == 0){
-            return false;
+        else if (players[p].owned_defences[num].id != 0){
+            do_u_have_it = true;
         }
-        return true;
     }
+    return do_u_have_it;
 }
 
 int ATK(int p, int opp){ //Attack enemy function, takes in player index and opponent index as parameters
@@ -118,7 +118,7 @@ int ATK(int p, int opp){ //Attack enemy function, takes in player index and oppo
         bool has_def = false;
         float dmg = players[p].owned_weapons[choice].damage;
         float def_dmg = dmg * players[opp].equipped_defence.DamageDeduction;
-        if (players[opp].equipped_defence.id != 0){
+        if (Own_Item(opp, 0, 'd')){
             has_def = true;
             dmg *= (1 - players[opp].equipped_defence.DamageDeduction);
         }
@@ -160,19 +160,20 @@ int DEF(int p, int opp){
     printf("Enter a defence's ID to equip it:\n\n");
     int choice;
     scanf("%i", &choice);
+    choice--; 
     if (choice == -1){
         Clear();
         printf("Exit code entered. Returning to menu.\n\n");
         return -1;
     }
-    else if (choice > 10 || choice < 1 || !(Own_Item(p, choice, 'd'))) { //Invalid input
+    else if (choice > 9 || choice < 0 || !Own_Item(p, choice, 'd')) { //Invalid input
         Clear();
         printf("Invalid defence choice. Returning to menu.\n\n");
         return -1;
     } else {
         Clear();
-        struct Defence placeholder = players[p].owned_defences[choice - 1];
-        players[p].owned_defences[choice - 1] = players[p].equipped_defence;        //Switch equipped defence with chosen
+        struct Defence placeholder = players[p].owned_defences[choice];
+        players[p].owned_defences[choice] = players[p].equipped_defence;        //Switch equipped defence with chosen
         players[p].equipped_defence = placeholder;
         printf("Equipped %s!\n", players[p].equipped_defence.name);
     }
