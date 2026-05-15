@@ -197,14 +197,6 @@ int DEF(int p, int opp){
     Clear();
     printf("Equipping defence. You currently have %g HP.\n", players[p].HP);
     printf("Owned defences:\n\n");
-    printf("%-10s%-25s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction");
-    for (int i = 0; i < 10; i++) {
-        if (Own_Item(p, i, 'd')) { //Only display defences the player owns
-            struct Defence d = players[p].owned_defences[i];
-            printf("%-10i%-25s%-20g%-20.1f\n", d.id, d.name, d.hitpoints, d.DamageDeduction);
-        }
-    }
-    printf("Enter a defence's ID to equip it:\n\n");
     int choice = FullItemPrint(p, 'd', true);
     if (choice == -1){
         return -1;
