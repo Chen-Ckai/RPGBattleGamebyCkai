@@ -301,7 +301,7 @@ void DISSTATS(int p){
     printf("Gold: %i\n", players[p].gold);
     printf("Consecutive Rest Turns: %i\n", players[p].consecutive_rest);
     printf("Owned Weapons: \n\n");
-    printf("%-5i%-30s%-20s%-20s%-20s\n", "ID", "Name", "Damage", "Cooldown", "Hit Chance (%)");
+    printf("%-5s%-30s%-20s%-20s%-20s\n", "ID", "Name", "Damage", "Cooldown", "Hit Chance (%)");
     for (int i = 0; i < 10; i++){
         if (Own_Item(p, i, 'w')) {
             struct Weapon w = players[p].owned_weapons[i];
@@ -317,7 +317,7 @@ void DISSTATS(int p){
         printf("None\n");
     }
     printf("\nOwned Defences:\n\n");
-    printf("%-5i%-30s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction (%)");
+    printf("%-5s%-30s%-20s%-20s\n", "ID", "Name", "Hit Points", "Damage Deduction (%)");
     for (int i = 0; i < 10; i++){
         if (Own_Item(p, i, 'd')) {
             struct Defence d = players[p].owned_defences[i];
@@ -419,8 +419,8 @@ int main(){ //Main program loop
                 printf("Invalid action. Please enter a valid menu option.\n\n");
                 continue;
         }
+        opp = p; //switch opponent
         p = 1 - p; //Switch player
-        opp = 1 - opp; //Switch opponent
     }
     
     if (players[0].HP <= 0){
