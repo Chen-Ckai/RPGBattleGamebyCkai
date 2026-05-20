@@ -1,43 +1,45 @@
 Basic Rundown
 
 - RPG with two people, each has a base sword (begins at 5 dmg)  
-- Shop to benefit the players (use gold as currency)
+- Shop to benefit the players (use iron supplements as currency)
 
 Game Layout
 
-- Each player starts with 1000 hp, 10 gold (g)  
+- Each player starts with 1000 hp, 10 iron supplements (Fe)  
   - Also has base 10 atk  
 - 6 possible actions:  
   - Attack: dmg enemy  
   - Defend: equip a defence card
   - Enter shop: self-explanatory  
   - Use card: use a card in inventory which can be used whenever  
-  - Rest: automatically sacrifice a turn to gain 10g  
+  - Rest: automatically sacrifice a turn to gain 10i  
   - Check stats + inventory: doesn’t take up a turn  
   
 - Two phases:
   1. Set up phase
 
-- 2 turns, only options are go to shop or rest
+- 2 turns, any action except atk
 
   2. Battle phase
 
-- 2 turns, can attack enemy, also can go to shop if wanted  
+- 2 turns, all actions permitted
 
 - Cycle is repeated until someone dies  
-- After one cycle, all stats (atk, hp, gold) are increased (level up)  
-  - Interest accrued on total money (+1g per 3g in storage)  
+- After one cycle, all stats (atk, hp, iron) are increased (level up)  
+  - Interest accrued on total money (+2 Fe per 7 Fe in storage)  
 
 Shop
 - Shop offers a selection of 5 “cards”  
   - 4 rare or common, 1 defence  
-  - Commit some amount of money to try and improve chances of rare cards appearing
+  - Commit some amount of iron to try and improve chances of rare cards appearing
     - + money committed% of rare card
-      - Applies to every card
-    - Extra chance is taken from common card chance
-    - If 100g put in, commons cannot be generated
-  - Reroll for 10g to reroll shop offers
+      - Ex. 12 Fe increases chance of one rare card by 12%
+        - Increased chance disappears when a rare card generates
+      - Above 100 Fe commit will can cause two or more increase chance
+        - Ex. 120 Fe will guarantee one rare card, 20% for another
+  - Reroll for 10 Fe to reroll shop offers
     - Does not interfere with initial commit
+    - Increases by 2 Fe every reroll
 
 Cards
 
@@ -52,13 +54,12 @@ Cards
   - Common (100%)  
   - Defence : guaranteed 1 defence card shown
   - Rare (0%)  
-  - Common Utility cards:  
-    - Sharpening stone (3g): increase dmg of all hits by 5  
-    - Factory reset (1g): restore health by 50 and remove all status effects  
-    - Fabric softener (10g): opponent’s current defence card at play’s hp is reduced by 25  
-    - Banana farm (5g): 10-20% of current money is given upon use  
+  - Common cards:  
+    - Sharpening stone (3 Fe): increase dmg of all hits by 5   
+    - Fabric softener (10 Fe): opponent’s current defence card at play’s hp is reduced by 25  
+    - Banana farm (5Fe): 10-20% of current money is given upon use  
     - Taunt (12g): 50% chance opponent loses one turn of set up  
-    - Banana peel (12g): 50% chance opponent loses one turn of battle  
+    - Banana peel (12Fe): 50% chance opponent loses one turn of battle  
     - Double edged sword (5g): +15 dmg at the cost of 15 hp  
     - Sauna (10g): apply burned status effect to player of choice  
     - Refrigerator (10g): apply frozen status effect to player of choice  
@@ -77,6 +78,7 @@ Cards
     - Mirror force (77g): Reflect 50% of dmg taken next battle turn to opponent  
     - Glass shield (25g): one hit is completely absorbed
     - Glutton (not based on an uma O_O) (100g): for one battle phase, all dmg is converted to hp
+    - You've activated my trap card! (___g): lorem ipsum
   - Rare cards:  
     - Oops, all 57 leaf clovers! (257g): all chance based effects gain +57% chance (1% -> 58%, 43% -> 100%, etc)
     - Another! (100g): attack once more per turn (1 -> 2, 2 -> 3, etc)  
@@ -92,3 +94,4 @@ Cards
     - Go fish (225g): if a card in your inventory matches one in your opponent’s, they lose that card  
     - Trolley Problem (102g): choose +202g or +100 dmg
       - If one is picked, subtract the other from players' stats
+    - Factory reset (20 Fe): all atk is converted into gold
