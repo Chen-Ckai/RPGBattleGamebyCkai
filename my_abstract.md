@@ -75,7 +75,8 @@ Cards
     - Barrier (250g): 1 battle phase, all dmg is reduced by 75%  
     - All In (100g): when equipped, hp is automatically reduced to 1, all damage from the next two cycles is completely negated  
     - Mirror force (77g): Reflect 50% of dmg taken next battle turn to opponent  
-    - 
+    - Glass shield (25g): one hit is completely absorbed
+    - Glutton (not based on an uma O_O) (100g): for one battle phase, all dmg is converted to hp
   - Rare cards:  
     - Oops, all 57 leaf clovers! (257g): all chance based effects gain +57% chance (1% -> 58%, 43% -> 100%, etc)
     - Another! (100g): attack once more per turn (1 -> 2, 2 -> 3, etc)  
