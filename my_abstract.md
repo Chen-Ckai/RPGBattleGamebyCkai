@@ -5,10 +5,11 @@ Basic Rundown
 
 Game Layout
 
-- Each player starts with 1000 hp, 500 gold (g)  
+- Each player starts with 1000 hp, 10 gold (g)  
   - Also has base 10 atk  
-- 5 possible actions:  
+- 6 possible actions:  
   - Attack: dmg enemy  
+  - Defend: equip a defence card
   - Enter shop: self-explanatory  
   - Use card: use a card in inventory which can be used whenever  
   - Rest: automatically sacrifice a turn to gain 10g  
@@ -27,6 +28,7 @@ Game Layout
 - After one cycle, all stats (atk, hp, gold) are increased (level up)  
   - Interest accrued on total money (+1g per 3g in storage)  
 
+Shop
 - Shop offers a selection of 5 “cards”  
   - 4 rare or common, 1 defence  
   - Commit some amount of money to try and improve chances of rare cards appearing
@@ -57,7 +59,7 @@ Cards
     - Banana farm (5g): 10-20% of current money is given upon use  
     - Taunt (12g): 50% chance opponent loses one turn of set up  
     - Banana peel (12g): 50% chance opponent loses one turn of battle  
-    - Double edged sword (5g): +15 dmg at the cost of 25 hp  
+    - Double edged sword (5g): +15 dmg at the cost of 15 hp  
     - Sauna (10g): apply burned status effect to player of choice  
     - Refrigerator (10g): apply frozen status effect to player of choice  
     - Wall street (15g): increase g interest per 3g by 1g  
@@ -65,15 +67,15 @@ Cards
     - Favour (18g): take one card from opponent of their choice  
     - Greedy (30g): Gain a turn in both phases  
     - Yummy in my tummy (10g): steal 10 hp from the opponent  
-    - Robbery (5g): steal 10g from the opponent  
+    - Robbery (10g): steal 10g from the opponent  
   - Defence Cards  
-    - Shield (5g): reduce dmg taken 10%, 1 battle phase  
-    - Frying pan (10g): reduce dmg taken by 50hp, 1 battle phase  
-    - Strong stance (10g): reduce dmg taken 50%, 1 battle phase  
+    - Shield (5g): reduce dmg taken 10%, 100hp 
+    - Frying pan (10g): reduce dmg taken by 50hp, 100hp
+    - Strong stance (20g): reduce dmg taken 50%, 150hp
     - Barrier (250g): 1 battle phase, all dmg is reduced by 75%  
     - All In (100g): when equipped, hp is automatically reduced to 1, all damage from the next two cycles is completely negated  
     - Mirror force (77g): Reflect 50% of dmg taken next battle turn to opponent  
-    -   
+    - 
   - Rare cards:  
     - Oops, all 57 leaf clovers! (257g): all chance based effects gain +57% chance (1% -> 58%, 43% -> 100%, etc)
     - Another! (100g): attack once more per turn (1 -> 2, 2 -> 3, etc)  
@@ -89,14 +91,3 @@ Cards
     - Go fish (225g): if a card in your inventory matches one in your opponent’s, they lose that card  
     - Trolley Problem (102g): choose +202g or +100 dmg
       - If one is picked, subtract the other from players' stats
-
-Status Effects
-
-- Burn:   
-  - Deal 10 dmg per battle turn for one battle phase  
-- Def down:  
-  - Increase dmg from all sources by 5  
-- Dmg down:  
-  - Reduce enemy dmg by 10%  
-- Freeze:  
-  - The next hit taken deals an additional 25% dmg, enemy cannot take a turn for 2 turns
