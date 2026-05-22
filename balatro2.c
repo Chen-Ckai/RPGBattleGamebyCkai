@@ -9,25 +9,38 @@
 //enum is like #define, but it allows for several definitions under one name, like a struct
 //It makes code more readable, and easier to use with switch cases
 enum CARDTYPE { 
-    COMMON,  //this is 1
-    DEFENCE, //this is 2
-    RARE     //this is 3, so on
+    COMMON,  //this is 0
+    RARE     //this is 1, so on
 };
 enum TARGET {
-    SELF,
+    SELF, 
     OPP,
     BOTH
 };
 enum EFFECTTYPE { 
     HP,
     ATK,
-    GOLD,
-    CHANCE,
+    IRON,
+    INTEREST, //Wall Street
+    STEAL_HP, 
+    STEAL_IRON,
+    STEAL_ATK,
+    BATTLETURNS,
+    SETUPTURNS,
+    RESTCOUNT,
+    SPECIAL      //Jackpot, Go Fish, etc.
 };
-enum EFFECTDEGREE{
-    ADD,
-    MULT,
-    PERCENT
+enum DRAWBACK{
+    ATK,
+    IRON,
+    HP,
+    BATTLETURNS,
+    SETUPTURNS,
+    NONE
+};
+enum DEFCONDITION{
+    HP,
+    PHASES
 };
 
 struct CARD{
@@ -37,38 +50,131 @@ struct CARD{
     int cost;
     enum TARGET target;
     enum EFFECTTYPE efftype;
+    enum DRAWBACK drawback;
     int procchance;
-    int effvalue;
-    enum EFFECTDEGREE effdegree;
+    int addvalue;
+    float multvalue;             //For percents and multipliers
 }; 
+
+struct DEFCARD{
+    int id;
+    char name[40];
+
+};
 
 struct Player{
     char name[40];
     float hp;
+    float maxhp;
     float atk;
-    int gold;
+    int iron;              // ALL CURRENCY MENTIONS ARE IN IRON SUPPLEMENTS
     int consecutive_rest;
-    struct CARD inventory[10];
-    int invfill;
+    struct CARD carinv[10];
+    struct DEFCARD definv[10];
+    int invspace;
 };
 
 struct Player player[2] = {
-    {"Player 1", 1000, 5, 10, 0, {0}, 0},
-    {"Player 2", 1000, 5, 10, 0, {0}, 0},
+    //Name       HP    MaxHP  ATK  IRON  RESTCOUNT  INVENTORY & SPACE
+    {"Player 1", 1000, 1000,  5,   10,   0,         {0},        10},
+    {"Player 2", 1000, 1000,  5,   10,   0,         {0},        10}
 };
 
-struct CARD card_database[] = {
+struct CARD cards[] = {
+//   ID    Name             Type      Cost   Target   EffectType  Drawback  Chance   AddValue  MultValue
+    {0,   "Banana Farm",    COMMON,   5,     SELF,    IRON,       NONE,       100,     20,       1.1},
+};
+
+struct CARD defcards[] = {
 //   ID    Name             Type      Cost   Target   EffectType   Chance   Effectvalue    EffectDegree
-    {1,   "Banana Farm",    COMMON,   5,     SELF,    GOLD,        100,     20,            PERCENT},
+    
 };
-
 
 int Ran_100(){ //Random generation for all chance mechanics
     return rand() % 100 + 1;
 }
 
-void Clear(){ //Clear Terminal, purely cosmetic
+int Ran_Com(){
+    //return rand() % # of common cards             return a common card id for the shop
+}
+
+int Ran_Rar(){
+    //return rand() % # of rare cards               return a rare card id for the shop
+}
+
+int Ran_Def(){
+    //return rand() % # of defence cards            return a def card id for the shop
+}
+
+void clear(){ //Clear Terminal, purely cosmetic
     printf("\e[1;1H\e[2J");
+}
+
+int ATK(int p, int opp){
+    getchar(); //Buffer from enter from the menu
+    printf("Attacking enemy. Are you really sure you'd like to do this? (y/n)\n");
+    char choice;
+    scanf("%c", &choice);
+    if (choice == 'n'){
+        clear();
+        printf("ok\n\n");
+        return -1;
+    }
+    else if (choice == 'y'){
+        printf("ok\n\n");
+        float dmg = player[p].atk;
+        player[opp].hp -= dmg;
+        printf("Dealt %g damage! Your enemy now has %g hp.", dmg, player[opp].hp);
+    }
+    else{
+        clear();
+        printf("Invalid input dummy, im forcing you back to the menu \n\n");
+        return -1;
+    }
+    return 0;
+}
+
+int DEF(int p){
+    printf("This action will allow you to equip a defence card in your inventory. ");
+}
+
+int USECARD(int useid, int p, int opp){
+    int targets[2];
+    int targetcount = 1;
+    switch (cards[useid].target){
+        case SELF:
+            targets[0] = p;
+            break;
+        case OPP:
+            targets[1] = opp;
+            break;
+        case BOTH:
+            targets[0] = p, targets[1] = opp;
+            break;
+    }
+    for (int i = 0; i < targetcount; i++){
+        switch (cards[useid].efftype){
+            case HP:
+                player[targets[i]].hp += cards[useid].addvalue;
+                player[targets[i]].hp *= cards[useid].multvalue;
+                break;
+            case SPECIAL:
+                if (useid == 32){
+
+                }
+        }
+        switch (cards[useid].drawback){
+            case HP:
+                player[targets[i]].hp -= cards[useid].addvalue;
+        }
+    }
+    return 0;
+}
+
+int SHOP(int p){
+    printf("Welcome to the SHOP!\n\n");
+    printf("How many iron supplements would you like to commit? ");
+    return 0;
 }
 
 bool Own_Item(int p, int num, char i_type){
