@@ -10,7 +10,8 @@
 //It makes code more readable, and easier to use with switch cases
 enum CARDTYPE { 
     COMMON,  //this is 0
-    RARE     //this is 1, so on
+    RARE,    //this is 1, so on
+    DEF
 };
 enum TARGET {
     SELF, 
@@ -65,12 +66,6 @@ struct CARD{
     float db_multvalue;
 }; 
 
-struct DEFCARD{
-    int id;
-    char name[40];
-
-};
-
 struct CARDDESC{
     int id;
     char desc[100];
@@ -83,35 +78,36 @@ struct Player{
     float atk;
     int atkcount;
     int iron;              // ALL CURRENCY MENTIONS ARE IN IRON SUPPLEMENTS
+    int ironinterest;
     int consecutive_rest;
     struct CARD cardinv[10];
-    struct DEFCARD definv[10];
     int invspace;
 };
 
 struct Player player[2] = {
-    //Name       HP    MaxHP  ATK  Atk Count IRON  RESTCOUNT  INVENTORY & SPACE
-    {"Player 1", 1000, 1000,  5,   1,        10,   0,         {0},        10},
-    {"Player 2", 1000, 1000,  5,   1,        10,   0,         {0},        10}
+    //Name       HP    MaxHP  ATK  Atk Count IRON  Interest   RESTCOUNT  INVENTORY & SPACE filled
+    {"Player 1", 1000, 1000,  5,   1,        10,   1,         0,         {0},        0},
+    {"Player 2", 1000, 1000,  5,   1,        10,   1,         0,         {0},        0}
 };
 
 struct CARD cards[] = {
-//   ID    Name                Type      Cost   Target   EffectType      Drawback    Chance   Added Values       Minused Values
-    {1,   "Sharpening Stone",  COMMON,   5,     SELF,    EFF_ATK,        NONE,       100,     20,       1.0,     0,        1.0},
-    {2,   "Fabric Softener",   COMMON,   10,    OPP,     EFF_DEF,        NONE,       100,     25,       1.0,     0,        1.0},
-    {3,   "Banana Farm",       COMMON,   7,     SELF,    EFF_IRON,       NONE,       100,     10,       1.2,     0,        1.0},
-    {4,   "Baguette Farm",     COMMON,   7,     SELF,    EFF_ATK,        NONE,       100,     10,       1.2,     0,        1.0},
-    {5,   "Cheesecake Farm",   COMMON,   7,     SELF,    EFF_HP,         NONE,       100,     10,       1.2,     0,        1.0},
-    {6,   "Insomnia",          COMMON,   5,     OPP,     EFF_SETUPTURNS, NONE,       50,      1,        1.0,     0,        1.0},
+//   ID    Name                      Type      Cost   Target   EffectType      Drawback    Chance   Positive Values    Negative Values
+    {1,   "Sharpening Stone",        COMMON,   2,     SELF,    EFF_ATK,        NONE,       100,     5,        1.0,     0,        1.0},
+    {2,   "Fabric Softener",         COMMON,   10,    OPP,     EFF_DEF,        NONE,       100,     25,       1.0,     0,        1.0},
+    {3,   "Banana Farm",             COMMON,   7,     SELF,    EFF_IRON,       NONE,       100,     10,       1.2,     0,        1.0},
+    {4,   "Baguette Farm",           COMMON,   7,     SELF,    EFF_ATK,        NONE,       100,     10,       1.2,     0,        1.0},
+    {5,   "Cheesecake Farm",         COMMON,   7,     SELF,    EFF_HP,         NONE,       100,     10,       1.2,     0,        1.0},
+    {6,   "Insomnia",                COMMON,   12,    OPP,     EFF_SETUPTURNS, NONE,       50,      0,        1.0,     1,        1.0},
+    {7,   "Cat sitting on your lap", COMMON,   13,    OPP,     EFF_BATTLETURNS,NONE,       50,      0,        1.0,     1,        1.0},
+    {8,   "Double Edged Sword",      COMMON,   15,    SELF,    EFF_ATK,        DB_HP,      100,     15,       1.0,     15,       1.0},
+    {9,   "Accounting Masterclass",  COMMON,   15,    SELF,    EFF_INTEREST,   NONE,       100,     1,        1.0,     0,        1.0},
+    {10,  "Wheel of Fortune",        COMMON,   5,     SELF,    EFF_ATK,        NONE,       25,      0,        1.25,    0,        1.0},
+    {26,  "Oops, all 57 leaf clovers",RARE,    157,   SELF,    EFF_SPECIAL,    NONE,       100,     1,        1.0,     0,        1.0},
 };
-int ccamt = 6, rramt = 0;
-int tcamt = 6;
-
-struct DEFCARD defcards[] = {
-//   ID    Name             Type      Cost   Target   EffectType   Chance   Effectvalue    EffectDegree
-    
-};
-int dcamt = 0;
+#define ccamt 10
+#define rcamt 1
+#define dcamt 0
+int tcamt = ccamt + rcamt + dcamt;
 
 struct CARDDESC carddesc[] = {
     {1, "Increases the damage of all hits by 5"},
@@ -143,56 +139,51 @@ void clear(){ //Clear Terminal, purely cosmetic
 }
 void FULLCARDPRINT(int p, enum MODE mode, struct CARD c[], int ccount){
     struct CARD *pcard = c;
+    printf("%-6s%-40s%-100s", "ID", "Name", "Description");
     if (mode == SHOP){
-        printf("%-6s%-40s%-100s", "ID", "Name", "Description");
+        printf("%-20s", "Iron Cost");
+    }
+    printf("\n");
+    for (int i = 0; i < ccount; i++){
+        printf("%-6i%-40s%-100s", pcard[i].id, pcard[i].name, carddesc[pcard[i].id - 1].desc);
         if (mode == SHOP){
-            printf("%-20s", "Iron Cost");
+            printf("%-20i", pcard[i].cost);
         }
         printf("\n");
-        for (int i = 0; i < ccount; i++){
-            printf("%-6i%-40s%-100s", pcard[i].id, pcard[i].name, carddesc[pcard[i].id - 1].desc);
-            if (mode == SHOP){
-                printf("%-20i", pcard[i].cost);
-            }
-            printf("\n");
-        }
-    }
-    else{
-
     }
     return;
 }
 
-int CHOICECHECK(int p, bool owned, enum MODE mode, struct CARD c[], int ccount){
+int CHOICECHECK(int p, enum MODE mode, struct CARD c[], int ccount){
     printf("Please enter the ID of the card you'd like to select:\n");
     int choice;
     scanf("%i", &choice);
     bool douownthis = false;
-    bool wasthisoffered = false;
+    int thiswasntoffered = 0;
     for (int i = 0; i < ccount; i++){
         if (c[i].id == choice && mode != SHOP){
             douownthis = true;
-            break;
         }
-        if (c[i].id != choice && mode == SHOP){
-            wasthisoffered = false;
-            break;
+        if (c[i].id == choice){
+            thiswasntoffered += 1;
+            printf("%i\n", thiswasntoffered);
         }
     }
+    clear();
     if (choice == -1){
-        printf("Exit code entered. \n\n");
-        return -1;
-    }
-    else if (douownthis){
-        printf("You don't own this. Please pick a card that you actually own.\n\n");
-        return -1;
-    }
-    else if (wasthisoffered){
-        printf("This item isn't in the collection shown idiot \n\n");
+        printf("Backed out. \n\n");
         return -1;
     }
     else if (choice < 1 || choice > 32){
-        printf("Invalid choice. Pick a valid card ID please. \n\n");
+        printf("How do you miss the mark that much dude, that isn't even a card in the game \n\n");
+        return -1;
+    }
+    else if (!douownthis && mode != SHOP){
+        printf("You don't own this. Please pick a card that you actually own.\n\n");
+        return -1;
+    }
+    else if (thiswasntoffered == 0){
+        printf("This item isn't in the collection shown dumdum \n\n");
         return -1;
     }
     else if (mode == SHOP && player[p].iron < cards[choice].cost){
@@ -208,20 +199,18 @@ int ATKf(int p, int opp){
     printf("Attacking enemy. Are you really sure you'd like to do this? (y/n)\n");
     char choice;
     scanf(" %c", &choice);
+    clear();
     if (choice == 'n'){
-        clear();
         printf("ok\n\n");
         return -1;
     }
     else if (choice == 'y'){
-        clear();
         printf("ok\n\n");
         float dmg = player[p].atk;
         player[opp].hp -= dmg;
         printf("Dealt %g damage! Your enemy now has %g hp. \n\n", dmg, player[opp].hp);
     }
     else{
-        clear();
         printf("Invalid input dummy, im forcing you back to the menu \n\n");
         return -1;
     }
@@ -232,7 +221,27 @@ int DEFf(int p){
     printf("This action will allow you to equip a defence card in your inventory. ");
 }
 
-int USECARDf(int useid, int p, int opp){
+int USECARDf(int p, int opp){
+    printf("This action will allow you to use a card.\n");
+    printf("Here is your current inventory: \n");
+    struct CARD tempc[player[p].invspace];
+    for (int i = 0; i < player[p].invspace; i++){
+        if (player[p].cardinv[i].id != 0){
+            tempc[i] = player[p].cardinv[i];
+        }
+    }
+    int useid;
+    while (true){
+        FULLCARDPRINT(p, INV, tempc, player[p].invspace);
+        useid = CHOICECHECK(p, INV, tempc, player[p].invspace);
+        if (useid == -1){
+            continue;
+        }
+        else{
+            break;
+        }
+    }
+    useid--; //0 indexing
     int targets[2];
     int targetcount = 0;
     switch (cards[useid].target){
@@ -249,21 +258,35 @@ int USECARDf(int useid, int p, int opp){
             targetcount = 2;
             break;
     }
-    for (int i = 0; i < targetcount; i++){
-        switch (cards[useid].efftype){
-            case EFF_HP:
-                player[targets[i]].hp += cards[useid].addvalue;
-                player[targets[i]].hp *= cards[useid].multvalue;
-                break;
-            case EFF_SPECIAL:
-                switch (useid){
+    if (cards[useid].procchance > Ran_100()){
+        for (int i = 0; i < targetcount; i++){
+            switch (cards[useid].efftype){
+                case EFF_HP:
+                    player[targets[i]].hp += cards[useid].addvalue;
+                    player[targets[i]].hp *= cards[useid].multvalue;
+                    break;
+                case EFF_ATK:
+                    player[targets[i]].atk += cards[useid].addvalue;
+                    player[targets[i]].atk *= cards[useid].multvalue;
+                    break;
+                case EFF_SPECIAL:
+                    switch (useid){
 
-                }
+                    }
+            }
+            switch (cards[useid].drawback){
+                case NONE:
+                    continue;
+                case DB_HP:
+                    player[targets[i]].hp -= cards[useid].db_addvalue;
+            }
         }
-        switch (cards[useid].drawback){
-            case DB_HP:
-                player[targets[i]].hp -= cards[useid].db_addvalue;
-        }
+        printf("Successfully used %s \n\n", player[p].cardinv[useid].name);
+        player[p].invspace--;
+        player[p].cardinv[useid].id = 0;
+    }
+    else {
+        printf("Your card failed the performance check lol \n\n");
     }
     return 0;
 }
@@ -275,7 +298,7 @@ int SHOPf(int p){
     int ccount = 6;
     struct CARD tempc[ccount];
     int i = 0;
-    while (i < ccount) {
+    while (i < ccount) { 
         if (Ran_100() <= ccardc) {
             int rang;
             bool is_duplicate = true;
@@ -284,7 +307,7 @@ int SHOPf(int p){
                 is_duplicate = false;
                 for (int a = 0; a < i; a++) {
                     if (tempc[a].id == cards[rang].id) {
-                        is_duplicate = true; // Busted! It's a duplicate.
+                        is_duplicate = true; // Stop everything, it is a dupe
                         break; 
                     }
                 }
@@ -296,16 +319,19 @@ int SHOPf(int p){
     int choice = 0;
     while (true){
         FULLCARDPRINT(p, SHOP, tempc, ccount);
-        choice = CHOICECHECK(p, false, SHOP, tempc, ccount);
+        printf("You have %i iron supplements at the moment\n\n", player[p].iron);
+        choice = CHOICECHECK(p, SHOP, tempc, ccount);
         switch (choice){
             case -1:
-                return -1;
+                break;
             default: 
-                for (int i = 0; i < 10; i++){
+                for (int i = 0; i < 10 - player[p].invspace; i++){
                     if (player[p].cardinv[i].id == 0){
+                        clear();
                         choice--;
                         player[p].cardinv[i] = cards[choice];
                         player[p].iron -= cards[choice].cost;
+                        player[p].invspace++;
                         printf("Bought %s!\n\n", cards[choice].name);
                         return 0;
                     }
@@ -351,7 +377,7 @@ int main(){ //Main program loop
         printf("4. Discard a card in your inventory\n");
         printf("5. Enter the shop\n");
         printf("6. Display your stats\n");
-        printf("7. Forfeit\n\n");
+        printf("7. Pass\n\n");
         printf("Which action would you like to take? (Enter the corresponding number)\n");
         int action;
         scanf("%i", &action);
@@ -368,7 +394,13 @@ int main(){ //Main program loop
                 }
                 break;
             case 3:
-                printf("Use a card in your inventory\n");
+                if (player[p].invspace == 0){
+                    printf("You don't have any cards to use idiot.\n\n");
+                    continue;
+                }
+                else if (USECARDf(p, opp) == -1){
+                    continue;
+                }
                 break;
             case 4:
                 printf("Discard a card in your inventory\n");
@@ -382,11 +414,10 @@ int main(){ //Main program loop
                 printf("Display your stats\n");
                 break;
             case 7:
-                printf("Forfeit\n");
-                player[p].hp = 0;
+                printf("Forfeited your turn bruh\n");
                 break;
             default:
-                printf("Invalid input dummy, im forcing you back to the menu \n\n");
+                printf("i lied you pass your turn \n\n");
         }
         //Switching players
         p = 1 - p;
