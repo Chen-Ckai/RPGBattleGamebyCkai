@@ -11,7 +11,7 @@
 enum CARDTYPE { 
     COMMON,  //this is 0
     RARE,    //this is 1, so on
-    LEGEND, 
+    SINCARD, 
     DEF
 };
 enum TARGET {
@@ -31,12 +31,16 @@ enum EFFECTTYPE {
     EFF_STEAL_ATK,
     EFF_SET_HP,
     EFF_SET_ATK,
-    EFF_SET_IRON,
-    EFF_BATTLETURNS,
-    EFF_SETUPTURNS,
+    EFF_BATTLETURN,
+    EFF_SETUPTURN,
+    EFF_PERMBTURNS,
+    EFF_PERMSTURNS,
     EFF_RESTCOUNT,
     EFF_DEBUFF,
-    EFF_SPECIAL      //Jackpot, Go Fish, etc.
+    EFF_SPECIAL,      //Jackpot, Go Fish, etc.
+    DEF_HP,
+    DEF_TURNS,
+    DEF_NONE
 };
 enum DRAWBACK{
     DB_HP,
@@ -44,11 +48,7 @@ enum DRAWBACK{
     DB_IRON,
     DB_BATTLETURNS,
     DB_SETUPTURNS,
-    NONE
-};
-enum DEFCONDITION{
-    DEF_HP,
-    DEF_PHASES
+    DB_NONE
 };
 enum MODE{
     SHOP,
@@ -69,18 +69,21 @@ struct CARD{
     enum DRAWBACK drawback;
     int procchance;
     int addvalue;
-    float multvalue;             //For percents and multipliers
+    float multvalue; 
     int db_addvalue;
     float db_multvalue;
-}; 
+    //For defence cards, addvalue is the actual hp of the defence card/turn duration, <------------------------------------
+    //db is the dmg reduction (- dmg is addvalue, %dmg is multvalue)<---------------------- IMPORTANT READ IT ME PLEASE
+};
 
-struct CARDDESC{
+struct CARDDESC{     //Each card's effect and type
     int id;
-    char desc[100];
+    char type[15];
+    char desc[125];
 };
 
 struct Player{
-    char name[40];
+    char name[30];
     float hp;
     float atk;
     int iron;              // ALL CURRENCY MENTIONS ARE IN IRON SUPPLEMENTS
@@ -88,70 +91,72 @@ struct Player{
     int consecutive_rest;
     int turns[2];
     enum PHASE current_phase; 
-    int turns_left;
-    struct CARD equipdef;
+    int turns_def[2];
+    struct CARD equipdef[9];
     struct CARD cardinv[10];
     int invspace;
 };
 
 struct Player player[2] = {
-    //Name       HP     ATK  IRON  Interest   RESTCOUNT  Battle Setup  Phase   Turns left  Equipped Def INVENTORY & SPACE filled
-    {"Player 1", 1000,  5,   10,   2,         0,         {2,    2},    SETUP,  2,          {0},         {0},        0},
-    {"Player 2", 1000,  5,   15,   3,         0,         {2,    2},    SETUP,  2,          {0},         {0},        0}
+    //Name       HP     ATK  IRON  Interest   RESTCOUNT  Battle Setup  Phase   Default turn amt   EquippedDefs INVENTORY & SPACE filled
+    {"Player 1", 1000,  5,   10,   2,         0,         {2,    2},    SETUP,  {2, 2},            {0},         {0},        0},
+    {"Player 2", 1000,  5,   15,   3,         0,         {2,    2},    SETUP,  {2, 2},            {0},         {0},        0}
 };
-
 struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
-//   ID    Name                         Type      Cost   Target   EffectType      Drawback         Chance   Positive Values    Negative Values
-    {1,   "Sharpening Stone",           COMMON,   2,     SELF,    EFF_ATK,        NONE,            100,     5,        1.0,     0,        1.0},
-    {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_DEF,        NONE,            100,     25,       1.0,     0,        1.0},
-    {3,   "Banana Farm",                COMMON,   7,     SELF,    EFF_IRON,       NONE,            100,     10,       1.2,     0,        1.0},
-    {4,   "Baguette Farm",              COMMON,   7,     SELF,    EFF_ATK,        NONE,            100,     10,       1.2,     0,        1.0},
-    {5,   "Cheesecake Farm",            COMMON,   7,     SELF,    EFF_HP,         NONE,            100,     10,       1.2,     0,        1.0},
-    {6,   "No more honk shoo",          COMMON,   12,    OPP,     EFF_SETUPTURNS, NONE,            50,      0,        1.0,     1,        1.0},
-    {7,   "Cat sitting on your lap",    COMMON,   13,    OPP,     EFF_BATTLETURNS,NONE,            50,      0,        1.0,     1,        1.0},
-    {8,   "Double Edged Sword",         COMMON,   15,    SELF,    EFF_ATK,        DB_HP,           100,     15,       1.0,     15,       1.0},
-    {9,   "Accounting Masterclass",     COMMON,   15,    SELF,    EFF_INTEREST,   NONE,            100,     1,        1.0,     0,        0.9},
-    {10,  "Wheel of Fortune",           COMMON,   5,     SELF,    EFF_ATK,        NONE,            25,      0,        1.25,    0,        1.0},
-    {11,  "Semi-consentual Robbery",    COMMON,   13,    OPP,     EFF_SPECIAL,    NONE,            100,     0,        1.0,     0,        1.0},
-    {12,  "Sin of Greed",               COMMON,   50,    SELF,    EFF_SPECIAL,    NONE,            100,     0,        1.0,     1,        1.0},
-    {13,  "Yummy yummy in my tummy",    COMMON,   10,    SELF,    EFF_STEAL_HP,   NONE,            100,     0,        1.05,    0,        },
-    {14,  "Non-consentual Robbery",     COMMON,   20,    SELF,    EFF_STEAL_IRON, NONE,            100,     10,       1.0,     10,       1.0},
-    {15,  "Anesthesia",                 COMMON,   12,    SELF,    EFF_RESTCOUNT,  NONE,            100,     5,        1.0,     0,        1.0},
+//   ID    Name                         Type      Cost   Target   EffectType      Drawback            Chance   Positive Values    Negative Values
+    {1,   "Sharpening Stone",           COMMON,   2,     SELF,    EFF_ATK,        DB_NONE,            100,     5,        1.0,     0,        1.0},
+    {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_DEF,        DB_NONE,            100,     25,       1.0,     0,        1.0},
+    {3,   "Banana Farm",                COMMON,   7,     SELF,    EFF_IRON,       DB_NONE,            100,     10,       1.1,     0,        1.0},
+    {4,   "Baguette Farm",              COMMON,   7,     SELF,    EFF_ATK,        DB_NONE,            100,     10,       1.1,     0,        1.0},
+    {5,   "Cheesecake Farm",            COMMON,   7,     SELF,    EFF_HP,         DB_NONE,            100,     10,       1.1,     0,        1.0},
+    {6,   "No more honk shoo",          COMMON,   12,    OPP,     EFF_SETUPTURN,  DB_NONE,            50,      0,        1.0,     1,        1.0},
+    {7,   "Cat sitting on your lap",    COMMON,   14,    OPP,     EFF_BATTLETURN, DB_NONE,            50,      0,        1.0,     1,        1.0},
+    {8,   "Double Edged Sword",         COMMON,   15,    SELF,    EFF_ATK,        DB_HP,              100,     15,       1.0,     15,       1.0},
+    {9,   "Accounting Masterclass",     COMMON,   15,    SELF,    EFF_INTEREST,   DB_NONE,            100,     1,        1.0,     0,        0.9},
+    {10,  "Wheel of Fortune",           COMMON,   5,     SELF,    EFF_ATK,        DB_NONE,            25,      0,        1.25,    0,        1.0},
+    {11,  "Semi-consentual Robbery",    COMMON,   13,    OPP,     EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {12,  "Sin of Greed",               COMMON,   50,    SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     1,        1.0},
+    {13,  "Yummy yummy in my tummy",    COMMON,   10,    SELF,    EFF_STEAL_HP,   DB_NONE,            100,     0,        0.05,    0,        1.0},
+    {14,  "Non-consentual Robbery",     COMMON,   20,    SELF,    EFF_STEAL_IRON, DB_NONE,            100,     10,       1.0,     0,        1.0},
+    {15,  "Anesthesia",                 COMMON,   12,    SELF,    EFF_RESTCOUNT,  DB_NONE,            100,     5,        1.0,     0,        1.0},
     {0},
-    {17,  "Burn Out",                   COMMON,   0,     SELF,    EFF_ATK,        DB_SETUPTURNS,   100,     0,        2.0,     1,        1.0},
-    {26,  "Oops, all 57 leaf clovers!", RARE,     157,   SELF,    EFF_SPECIAL,    NONE,            100,     1,        1.0,     0,        1.0},
-    {41,  "Main Character Syndrome",    LEGEND,   400,   SELF,    EFF_SPECIAL},
-    {42,  "Oops, all 3249 leaf clovers!",LEGEND,  400,   SELF,    EFF_SPECIAL},
+    {17,  "Burn Out",                   COMMON,   19,    SELF,    EFF_ATK,        DB_SETUPTURNS,      100,     0,        2.0,     1,        1.0},
+    {21,  "Boiling Pot",                DEF,      5,     SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        0.1},
+    {22,  "Frying Pan",                 DEF,      5,     SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     20,       0.0},
+    {23,  "Strong Stance",              DEF,      30,    SELF,    DEF_HP,         DB_NONE,            100,     150,      1.0,     0,        0.5},
+    {24,  "Barrier",                    DEF,      150,   SELF,    DEF_TURNS,      DB_NONE,            100,     3,        1.0,     0,        1.0},
+    {26,  "Oops, all 57 leaf clovers!", RARE,     157,   SELF,    EFF_SPECIAL,    DB_NONE,            100,     1,        1.0,     0,        1.0},
+    {41,  "Main Character Syndrome",    SINCARD,  400,   SELF,    EFF_SPECIAL},
+    {42,  "Oops, all 3249 leaf clovers!",SINCARD, 400,   SELF,    EFF_SPECIAL},
 };
 #define ccamt 17
 #define rcamt 1
-#define lcamt 0
-#define dcamt 0
-int tcamt = ccamt + rcamt + dcamt + lcamt;
+#define scamt 2
+#define dcamt 2
 
 struct CARDDESC carddesc[] = {
-    {1, "Increases the damage of all hits by 5"},
-    {2, "Decreases the enemy's equipped defence card's HP by 25"},
-    {3, "Gain 10%% of your current iron + 10"},
-    {4, "Gain 10%% of your current attack stat + 10"},
-    {5, "Gain 10%% of your current hp + 10"},
-    {6, "50%% chance to make the enemy lose one setup turn"},
-    {7, "50%% chance to make the enemy lose one battle turn"},
-    {8, "Sacrifice 15 hp for 15 attack"},
-    {9, "Gain an additional iron per 5 iron during interest gains"},
-    {10, "25%% chance to gain x1.25 attack"},
-    {11, "Gain a card from your opponent of their choice"},
-    {12, "Gain a turn in both phases"},
-    {13, "Gain 5%% of your opponent's hp"},
-    {14, "Steal 10 iron fron your opponent"},
-    {15, "Increase consecutive rest count by 5"},
-    {16, "Gain 10%% of the opponent's iron"},
-    {17, "Sacrifice one set up turn for one 2x damage attack"},
-    {26, "You are lucky. (All percent-based effects gain +57%%)"},
-    {41, "The spotlight is on you."},
-    {42, "Reality bends in the face of your luck."},
-    {43, "Note. This does not actually cause a stack overflow"},
-    {44, "EXODIA...  OBLITERATE!!!!!!"},
+    {1, "Common", "Increases the damage of all hits by 5"},
+    {2, "Common", "Decreases the enemy's equipped defence card's HP by 25"},
+    {3, "Common", "Gain 10%% of your current iron + 10"},
+    {4, "Common", "Gain 10%% of your current attack stat + 10"},
+    {5, "Common", "Gain 10%% of your current hp + 10"},
+    {6, "Common", "50%% chance to make the enemy lose one setup turn"},
+    {7, "Common", "50%% chance to make the enemy lose one battle turn"},
+    {8, "Common", "Sacrifice 15 hp for 15 attack"},
+    {9, "Common", "Gain an additional iron per 5 iron during interest, lose 10%% of your iron"},
+    {10, "Common", "25%% chance to gain x1.25 attack"},
+    {11, "Common", "Gain a card from your opponent of their choice"},
+    {12, "Common", "Gain a turn in both phases"},
+    {13, "Common", "Gain 5%% of your opponent's hp"},
+    {14, "Common", "Steal 10 iron fron your opponent"},
+    {15, "Common", "Increase consecutive rest count by 5"},
+    {16, "Common", "Gain 10%% of the opponent's iron"},
+    {17, "Common", "Sacrifice one set up turn for x1.75 attack"},
+    {26, "Rare", "You are lucky. (All percent-based effects gain +57%%)"},
+    {41, "Sincardnate", "The spotlight is on you."},
+    {42, "Sincardnate", "Reality bends in the face of your luck."},
+    {43, "Sincardnate", "Note. This does not actually cause a stack overflow"},
+    {44, "Sincardnate", "EXODIA...  OBLITERATE!!!!!!"},
 };
 
 int Ran_100(){ //Random generation for all chance mechanics
@@ -163,7 +168,7 @@ int Ran_Com(int p){
     return rand() % ccamt;
 }
 int Ran_Rar(){
-    return rand() % rcamt + ccamt + dcamt;
+    return rand() % rcamt + (ccamt + dcamt); //This makes sure it can only return rare card ids
 }
 int Ran_Def(){
     //return rand() % dcamt + ccant;
@@ -205,7 +210,6 @@ int CHOICECHECK(int p, enum MODE mode, struct CARD c[], int ccount){
         }
         if (c[i].id == choice){
             thiswasntoffered += 1;
-            printf("%i\n", thiswasntoffered);
         }
     }
     clear();
@@ -256,10 +260,8 @@ int ATKf(int p, int opp){
     return 0;
 }
 
-int DEFf(int p){
-    printf("This action will allow you to equip a defence card in your inventory. ");
-}
-
+//any needed values when using cards
+int clovercount = 0;
 int USECARDf(int p, int opp){
     printf("This action will allow you to use a card.\n");
     printf("Here is your current inventory: \n");
@@ -307,33 +309,60 @@ int USECARDf(int p, int opp){
             targetcount = 2;
             break;
     }
+    printf("It didn't get stuck :) %i\n", useid);
     if (100 - cards[useid].procchance < Ran_100()){
+        int addvalue = cards[useid].addvalue;
+        float multvalue = cards[useid].multvalue + clovercount;
         for (int i = 0; i < targetcount; i++){
             switch (cards[useid].efftype){
                 case EFF_HP:
-                    player[targets[i]].hp += cards[useid].addvalue;
-                    player[targets[i]].hp *= cards[useid].multvalue;
+                    player[targets[i]].hp += addvalue;
+                    player[targets[i]].hp *= multvalue;
                     break;
                 case EFF_IRON:
-                    player[targets[i]].iron += cards[useid].addvalue;
-                    player[targets[i]].iron *= cards[useid].multvalue;
+                    player[targets[i]].iron += addvalue;
+                    player[targets[i]].iron *= multvalue;
                     break;
                 case EFF_ATK:
-                    player[targets[i]].atk += cards[useid].addvalue;
-                    player[targets[i]].atk *= cards[useid].multvalue;
+                    player[targets[i]].atk += addvalue;
+                    player[targets[i]].atk *= multvalue;
+                    break;
+                case EFF_INTEREST:
+                    player[targets[i]].ironinterest += addvalue;
                     break;
                 case EFF_STEAL_HP:
-                    player[targets[i]].hp += cards[useid].addvalue;
-                    player[targets[i]].hp *= cards[useid].multvalue;
-                    player[targets[1-i]].hp -= cards[useid].db_addvalue;
-                    player[targets[1-i]].hp -= cards[useid].db_multvalue;
+                    player[targets[i]].hp += addvalue;
+                    player[targets[i]].hp *= multvalue;
+                    player[targets[1-i]].hp -= addvalue;
+                    player[targets[1-i]].hp *= 1 - multvalue;
+                    break;
+                case EFF_STEAL_IRON:
+                    player[targets[i]].iron += addvalue;
+                    player[targets[i]].iron *= multvalue;
+                    player[targets[1-i]].iron -= addvalue;
+                    player[targets[1-i]].iron *= multvalue;
+                    break;
+                case EFF_STEAL_ATK:
+                    player[targets[i]].atk += addvalue;
+                    player[targets[i]].atk *= multvalue;
+                    player[targets[1-i]].atk -= addvalue;
+                    player[targets[1-i]].atk *= 1 - multvalue;
+                    break;
+                case EFF_SET_ATK:
+                    player[targets[i]].atk = addvalue;
+                    break;
+                case EFF_BATTLETURN:
+                    player[targets[i]].turns[player[targets[i]].current_phase] += addvalue;
+                    break;
                 case EFF_SPECIAL:
                     switch (useid){
 
                     }
+                case DEF_HP:
+                case DEF_TURNS:
             }
             switch (cards[useid].drawback){
-                case NONE:
+                case DB_NONE:
                     break;
                 case DB_HP:
                     player[targets[i]].hp -= cards[useid].db_addvalue;
@@ -366,6 +395,7 @@ struct CARD SHOPGEN(int i, int p, int ccount, int rcardc, int ccardc, struct CAR
                     break; 
                 }
             }
+            //Make sure the card isn't in your inventory
             if (!is_duplicate) {
                 for (int b = 0; b < 10; b++){
                     if (player[p].cardinv[b].id == cards[rang].id){
@@ -381,7 +411,7 @@ struct CARD SHOPGEN(int i, int p, int ccount, int rcardc, int ccardc, struct CAR
 int SHOPf(int p){
     printf("=---------Welcome to the SHOP!----------=\n\n");
     int ccardc = 100, rcardc = 0, lcardc = rcardc/10; //Chance for each card to appear
-    int ccount = 7; //How many cards to generate
+    int ccount = 8; //How many cards to generate
     int i = 0; 
     struct CARD tempc[ccount];
     while (i < ccount){
@@ -410,16 +440,37 @@ int SHOPf(int p){
                         player[p].iron -= cards[choice].cost;
                         player[p].invspace++;
                         printf("Bought %s!\n\n", cards[choice].name);
-                        return -1;
+                        return 0;
                     }
                 }
         }
     }
     return 0;
 }
+int RESTf(int p){
+    printf("This action will make you rest. You are currently at %i consecutive rests. \n", player[p].consecutive_rest);
+    printf("Are you sure you'd like to rest: (y/n) \n");
+    char choice;
+    scanf(" %c", &choice);
+    if (choice == 'n'){
+        printf("ok \n");
+        return -1;
+    }
+    else if (choice == 'y'){
+        printf("You have rested. \n");
+        int irongain = 10 + player[p].consecutive_rest * 2;
+        float hpgain = player[p].hp * 0.05;
+        printf("Gained %i iron and %g hp", irongain, hpgain);
+        return 0;
+    }
+    else {
+        printf("dude i gave you a clear choice \n");
+        return -1;
+    }
+}
 void Turn_End(int *p, int *opp){
-    player[*p].turns_left--;
-        if (player[*p].turns_left <= 0) {
+    player[*p].turns[player[*p].current_phase]--;
+        if (player[*p].turns[player[*p].current_phase] <= 0) {
             switch (player[*p].current_phase){
                 case SETUP:
                     player[*p].current_phase = BATTLE;
@@ -433,50 +484,86 @@ void Turn_End(int *p, int *opp){
                     clear();
                     break;
             }
+            //Reset counter back to however many needed
+            player[*p].turns[player[*p].current_phase] = player[*p].turns_def[player[*p].current_phase];    
             //Switch players, reset turn counter
             *p = 1 - *p;
             *opp = 1 - *opp;
-            player[*p].turns_left = 2;    //Reset counter back to however many needed
         }
 }
 void Tutorial_Thomah(){
     getchar();
     printf("Not Generic RPG Roguelike Game is most likely unlike any game you've ever played before. \n");
-    sleep(4);
+    getchar();
     printf("The goal of the game is to reduce your enemy's hp to 0 by attacking them. \n");
-    sleep(3);
+    getchar();
     printf("There are several things in this game you can use to assist in your objective. \n");
     printf("Enter the corresponding number to learn about each action: \n");
-    printf("1. Attacking your opponent \n");
-    printf("2. Cards \n");
-    printf("3. The shop \n");
-    printf("4. Resting \n");
-    int choice;
-    scanf("%i", &choice);
-    printf("As you may have been able to tell by the title, this is a roguelike game. I will briefly describe the roguelike genre.\n");
-    sleep(4);
-    printf("A roguelike is a game that scales in difficulty. This means that as the game progresses, winning will be harder, but you'll gain more and more tools to help.\n");
-    sleep(4);
-    printf("This is often done in conjunction with a shop mechanic, where you purchase items to assist you.\n");
-    sleep(4);
-    printf("In this game, you scale with the help of items called cards. \n");
-    sleep(4);
-    printf("There are 3 main types of cards you will encounter: \n");
-    printf("1. Common cards: these are the cards you'll see the most. They have mild effects for mild prices.\n");
-    printf("2. Defence cards: these are cards that you can equip to defend yourself from your enemy.\n");
-    printf("3. Rare cards: these cards are rarer , but also have much greater effects.\n");
-    printf("And a secret sincardnate rarity that you may or may not encounter...\n");
-    getchar();
-    clear();
-    printf("Alright. Now, I'll explain the shop mechanic a bit more.\n");
-    printf("Entering the shop shows you 7 cards");
+    while(true){
+        printf("1. Attacking your opponent \n");
+        printf("2. Cards \n");
+        printf("3. Inventory \n");
+        printf("4. The shop \n");
+        printf("5. Resting \n");
+        printf("6. Stats \n");
+        printf("7. Phases and turns\n");
+        printf("(Enter -1 if you are ready to play)\n");
+        int choice;
+        scanf("%i", &choice);
+        getchar();
+        clear();
+        switch (choice){
+            case -1:
+                printf("Ok get ready...");
+                return;
+            case 1:
+                printf("In this game, you'll need to attack your enemy to get their hp to 0. \n");
+                printf("When attacking, you deal damage to your opponent equal to your attack stat. \n");
+                getchar();
+                printf("Note that by attacking, you will also trigger the effect of whatever defence card the opponent has equipped.\n");
+                printf("(See cards for more information)\n");
+                getchar();
+                clear();
+                break;
+            case 2:
+                printf("As you may have been able to tell by the title, this is a roguelike game. I will briefly describe the roguelike genre.\n");
+                printf("A roguelike is a game that scales in difficulty. This means that as the game progresses, winning will get harder, but you'll gain more and more tools to help.\n");
+                printf("(Warning. These games take a long time to complete, including this one.)\n");
+                getchar();
+                printf("In this game, you scale with the help of items called cards. \n");
+                getchar();
+                printf("What each one does is told by the card's description, you'll see these whenever presented a card.");
+                printf("There are 3 main types of cards you will encounter: \n");
+                printf("1. Common cards: these are the cards you'll see the most. They have mild effects for mild prices.\n");
+                printf("2. Defence cards: these are cards that you can equip to defend yourself from your enemy.\n");
+                printf("Also note that getting hit with one of these equipped can have other effects, told by the card description.\n");
+                printf("3. Rare cards: these cards are rarer, but also have much greater effects.\n");
+                printf("4. And a secret sincardnate (sin + card + incarnate) rarity that you may or may not encounter...\n");
+                getchar();
+                printf("When in the main menu, there are two things you can do with cards:\n");
+                printf("1. Use cards: using a card does the effect shown in the card description (This also lets you equip defence cards)\n");
+                printf("2. Sell cards: this refunds you with 50%% of the iron it is worth (the amount will be shown to you)\n");
+                getchar();
+                clear();
+                break;
+            case 3:
+                printf("Each player has their very own inventory to store the cards used in this game. \n");
+                printf("Each person can only hold 10 cards at a time. If you try to get above this, you'll be asked to lose a card.\n");
+                getchar();
+                clear();
+                break;
+            default:
+                printf("That option doesn't exist yet\n");
+        }
+        printf("Anything else you need to know? \n");
+    }
 }
 //main program
 int main(){ //Main program loop
     srand(time(NULL));
     int p = 0;
     int opp = 1;
-    cards[15] = (struct CARD){16,  "Prescription",  COMMON,   18,    SELF,    EFF_IRON,       NONE,       100,     0,  player[p].iron / 10, 0, 1.0};
+    cards[15] = (struct CARD){16,  "Prescription",  COMMON,   18,    SELF,    EFF_IRON,  DB_NONE,       100,     0,  player[p].iron / 10, 0, 1.0};
     clear();
     printf("Welcome to Not Generic RPG Roguelike game\n");
     printf("Would you like to view the tutorial? (y/n)\n");
@@ -484,7 +571,7 @@ int main(){ //Main program loop
     scanf(" %c", &manual_choice);
     clear();
     if (manual_choice == 'y') {
-        //TUTORIAL GOES HERE <--------------
+        Tutorial_Thomah();
     }
     else{
         printf("get on with it then\n");
@@ -500,16 +587,16 @@ int main(){ //Main program loop
         curphase = player[p].current_phase; 
         switch (curphase){
             case SETUP:
-                printf("It is currently the setup phase (%d turns left)\n\n", player[p].turns_left);
+                printf("It is currently the setup phase (%i turns left)\n\n", player[p].turns[player[p].current_phase]);
                 break;
             case BATTLE:
-                printf("It is currently the battle phase (you can attack now) (%d turns left)\n\n", player[p].turns_left);
+                printf("It is currently the battle phase (you can attack now) (%i turns left)\n\n", player[p].turns[player[p].current_phase]);
                 break;
         }
         printf("Player %i, please choose one of the options below\n\n", p + 1);
         printf("1. Attack your enemy\n");
         printf("2. Use a card in your inventory\n");
-        printf("3. Discard a card in your inventory\n");
+        printf("3. Sell a card in your inventory\n");
         printf("4. Enter the shop\n");
         printf("5. Display your stats\n");
         printf("6. Pass\n\n");
@@ -540,7 +627,11 @@ int main(){ //Main program loop
                 }
                 continue;
             case 3:
-                printf("Discard a card in your inventory\n");
+                if (player[p].invspace == 10){
+                        printf("You don't have any cards to sell idiot.\n\n");
+                        continue;
+                }
+                printf("Sell a card in your inventory\n");
                 break;
             case 4:
                 if (SHOPf(p) == -1){
