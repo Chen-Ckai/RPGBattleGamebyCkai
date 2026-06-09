@@ -320,10 +320,12 @@ int USECARDf(int p, int opp){
     clear();
     printf("This action will allow you to use a card.\n");
     printf("Here is your current inventory: \n");
-    struct CARD tempc[player[p].invspace];
+    struct CARD tempc[10];
+    int tempc_i;
     for (int i = 0; i < 10; i++){
         if (player[p].cardinv[i].id != 0){
-            tempc[i] = player[p].cardinv[i];
+            tempc[tempc_i] = player[p].cardinv[i];
+            tempc_i++;
         }
     }
     int useid;
@@ -435,6 +437,8 @@ int USECARDf(int p, int opp){
                             player[p].atk *= 10;
                             player[p].iron = 0;
                             heavenrest = true;
+                            break;
+                        default:
                             break;
                     }
                 case DEF_HP:
