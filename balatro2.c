@@ -130,6 +130,10 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {23,  "Frying Pan",                 DEF,      15,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     20,       0.0},
     {24,  "Strong Stance",              DEF,      75,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        0.5},
     {25,  "Barrier",                    DEF,      150,   SELF,    DEF_TURNS,      DB_NONE,            100,     3,        1.0,     0,        1.0},
+  /*{26,  ""}
+    
+    
+    */
     {31,  "Oops, all 57 leaf clovers!", RARE,     157,   SELF,    EFF_SPECIAL,    DB_NONE,            100,     1,        1.0,     0,        1.0},
     {32,  "Irony",                      RARE,     0,     SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
     {33,  "Tomato Tomato",              RARE,     50,    SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
@@ -177,7 +181,7 @@ struct CARDDESC carddesc[] = {
     {34, "Rare", "KOBE"},
     {35, "Rare", "On one hand, I get x3 attack, but so does my opponent..."},
     {36, "Rare", "get in the car boys we goin to vegas"},
-    {37, "Rare", "Destroy it all for me, okay?"},
+    {37, "Rare", "Just one more thing. Destroy it all for me, okay?"},
     {41, "Sincardnate", "The spotlight is on you."},
     {42, "Sincardnate", "You are REALLY lucky. No really. Like STUPID lucky."},
     {43, "Sincardnate", "Note. This does not actually cause a stack overflow"},
@@ -280,16 +284,14 @@ int ATKf(int p, int opp){
         float dmg = player[p].atk;
         struct CARD def = player[opp].equipdef;
         if (def.id != 0){
-            float def_dmg;
-            //modify dmg based on the stats of the defence card
-            def_dmg = dmg - def.db_addvalue;
-            def_dmg = dmg * def.db_multvalue;
+            float def_dmg = dmg;
+            float initial_dmg = dmg;
             dmg -= def.db_addvalue;
-            dmg *= def.db_multvalue;  
+            dmg *= def.db_multvalue;
             if (dmg <= 0){
                 dmg = 0;
-                def_dmg = player[p].atk;
             }
+            def_dmg = initial_dmg - dmg;
             printf("Your enemy's defence card negated %g damage! \n", def_dmg);
             switch (def.efftype){
                 //Only deduct hp if the type of def is HP
@@ -321,7 +323,7 @@ int USECARDf(int p, int opp){
     printf("This action will allow you to use a card.\n");
     printf("Here is your current inventory: \n");
     struct CARD tempc[10];
-    int tempc_i;
+    int tempc_i = 0;
     for (int i = 0; i < 10; i++){
         if (player[p].cardinv[i].id != 0){
             tempc[tempc_i] = player[p].cardinv[i];
@@ -441,6 +443,7 @@ int USECARDf(int p, int opp){
                         default:
                             break;
                     }
+                    break;
                 case DEF_HP:
                 case DEF_TURNS:
                 case DEF_NONE:
