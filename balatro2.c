@@ -39,7 +39,7 @@ enum EFFECTTYPE {
     EFF_SPECIAL,      //Jackpot, Go Fish, etc.
     DEF_HP,
     DEF_TURNS,
-    DEF_NONE
+    DEF_SPECIAL
 };
 enum DRAWBACK{
     DB_HP,
@@ -130,13 +130,11 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {23,  "Frying Pan",                 DEF,      15,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     20,       0.0},
     {24,  "Strong Stance",              DEF,      75,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        0.5},
     {25,  "Barrier",                    DEF,      150,   SELF,    DEF_TURNS,      DB_NONE,            100,     3,        1.0,     0,        1.0},
-     /* --- GENERIC PLACEHOLDERS FOR MISSING INDEXES (26-30) ---
-    {26,  "Placeholder Card 26",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
-    {27,  "Placeholder Card 27",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
-    {28,  "Placeholder Card 28",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
-    {29,  "Placeholder Card 29",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
-    {30,  "Placeholder Card 30",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
-    --------------------------------------------------------*/
+    {26,  "Last Stand",                 DEF,      100,   SELF,    DEF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {27,  "Mirror Force",               DEF,      47,    SELF,    DEF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        0.5},
+    {28,  "Glass shield",               DEF,      25,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {29,  "Placeholder Card 29",        DEF,      0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {30,  "Placeholder Card 30",        DEF,      0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
     {31,  "Oops, all 57 leaf clovers!", RARE,     157,   SELF,    EFF_SPECIAL,    DB_NONE,            100,     1,        1.0,     0,        1.0},
     {32,  "Irony",                      RARE,     0,     SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
     {33,  "Tomato Tomato",              RARE,     50,    SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
@@ -192,20 +190,6 @@ struct CARDDESC carddesc[] = {
     {44, "Sincardnate", "EXODIA...  OBLITERATE!!!!!!"},
 };
 
-int FindCardIndex(int card_id) {
-    for (int i = 0; i < TOTAL_CARDS; i++) {
-        if (cards[i].id == card_id) return i;
-    }
-    return -1;
-}
-
-int FindDescIndex(int card_id) {
-    for (int i = 0; i < TOTAL_CARDS; i++) {
-        if (carddesc[i].id == card_id) return i;
-    }
-    return -1;
-}
-
 int Ran_100(){ //Random generation for all chance mechanics
     return rand() % 100 + 1;
 }
@@ -223,7 +207,24 @@ int Ran_Def(){
 int Ran_Sin(){
     //return rand() % lcamt + rcamt + ccamt + dcamt;
 }
-
+/*
+int FindCardIndex(int card_id) {
+    for (int i = 0; i < TOTAL_CARDS; i++) {
+        if (cards[i].id == card_id){
+            return i;
+        }
+    }
+    return -1;
+}
+int FindDescIndex(int card_id) {
+    for (int i = 0; i < TOTAL_CARDS; i++) {
+        if (carddesc[i].id == card_id) {
+            return i;
+        }
+    }
+    return -1;
+}
+*/
 void clear(){ //Clear Terminal, purely cosmetic
     printf("\e[1;1H\e[2J");
 }
@@ -463,7 +464,7 @@ int USECARDf(int p, int opp){
                     break;
                 case DEF_HP:
                 case DEF_TURNS:
-                case DEF_NONE:
+                case DEF_SPECIAL:
                     struct CARD empty;
                     player[p].equipdef = cards[useid];
                     for (int idx = 0; idx < player[p].invspace; idx++){
