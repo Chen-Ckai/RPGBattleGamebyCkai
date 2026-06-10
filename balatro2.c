@@ -130,10 +130,13 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {23,  "Frying Pan",                 DEF,      15,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     20,       0.0},
     {24,  "Strong Stance",              DEF,      75,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        0.5},
     {25,  "Barrier",                    DEF,      150,   SELF,    DEF_TURNS,      DB_NONE,            100,     3,        1.0,     0,        1.0},
-  /*{26,  ""}
-    
-    
-    */
+     /* --- GENERIC PLACEHOLDERS FOR MISSING INDEXES (26-30) ---
+    {26,  "Placeholder Card 26",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {27,  "Placeholder Card 27",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {28,  "Placeholder Card 28",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {29,  "Placeholder Card 29",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {30,  "Placeholder Card 30",        COMMON,   0,     SELF,    EFF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
+    --------------------------------------------------------*/
     {31,  "Oops, all 57 leaf clovers!", RARE,     157,   SELF,    EFF_SPECIAL,    DB_NONE,            100,     1,        1.0,     0,        1.0},
     {32,  "Irony",                      RARE,     0,     SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
     {33,  "Tomato Tomato",              RARE,     50,    SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
@@ -148,6 +151,7 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
 #define rcamt 7
 #define scamt 2
 #define dcamt 4
+#define TOTAL_CARDS (sizeof(cards) / sizeof(cards[0]))
 
 struct CARDDESC carddesc[] = {
     {1, "Common", "Increases the damage of all hits by 5"},
@@ -171,10 +175,10 @@ struct CARDDESC carddesc[] = {
     {19, "Common", "Add one stack of iron deficiency to your opponent"},
     {20, "Common", "Gain x3 attack, lose a battle turn"},
     {21, "Common", "Gain a setup turn, lose 25%% of your attack"},
-    {22, "Defence", "aosidha"},
-    {23, "Defence", "aosduba"},
-    {24, "Defence", "aposjglwbe"},
-    {25, "Defence", "apsdihaoihf"},
+    {22, "Defence", "#22"},
+    {23, "Defence", "#23"},
+    {24, "Defence", "#24"},
+    {25, "Defence", "#25"},
     {31, "Rare", "You are lucky."},
     {32, "Rare", "Totally unintended pun"},
     {33, "Rare", "It's pronounced tomahto not tomayto"},
@@ -187,6 +191,20 @@ struct CARDDESC carddesc[] = {
     {43, "Sincardnate", "Note. This does not actually cause a stack overflow"},
     {44, "Sincardnate", "EXODIA...  OBLITERATE!!!!!!"},
 };
+
+int FindCardIndex(int card_id) {
+    for (int i = 0; i < TOTAL_CARDS; i++) {
+        if (cards[i].id == card_id) return i;
+    }
+    return -1;
+}
+
+int FindDescIndex(int card_id) {
+    for (int i = 0; i < TOTAL_CARDS; i++) {
+        if (carddesc[i].id == card_id) return i;
+    }
+    return -1;
+}
 
 int Ran_100(){ //Random generation for all chance mechanics
     return rand() % 100 + 1;
@@ -210,16 +228,15 @@ void clear(){ //Clear Terminal, purely cosmetic
     printf("\e[1;1H\e[2J");
 }
 void FULLCARDPRINT(int p, enum MODE mode, struct CARD c[], int ccount){
-    struct CARD *pcard = c;
     printf("%-6s%-40s%-15s%-80s", "ID", "Name", "Type", "Description");
     if (mode == SHOP){
         printf("%-20s", "Iron Supplement Cost");
     }
     printf("\n");
     for (int i = 0; i < ccount; i++){
-        printf("%-6i%-40s%-15s%-80s", pcard[i].id, pcard[i].name, carddesc[pcard[i].id - 1].type, carddesc[pcard[i].id - 1].desc);
+        printf("%-6i%-40s%-15s%-80s", c[i].id, c[i].name, carddesc[c[i].id - 1].type, carddesc[c[i].id - 1].desc);
         if (mode == SHOP){
-            printf("%-20i", pcard[i].cost);
+            printf("%-20i", c[i].cost);
         }
         printf("\n");
     }
@@ -247,7 +264,7 @@ int CHOICECHECK(int p, enum MODE mode, struct CARD c[], int ccount){
         printf("Backed out. \n\n");
         return -2;
     }
-    else if (choice < 1 || choice > 50){
+    else if (choice < 1 || choice > TOTAL_CARDS){
         printf("How do you miss the mark that much dude, that isn't even a card in the game \n\n");
         return -1;
     }
