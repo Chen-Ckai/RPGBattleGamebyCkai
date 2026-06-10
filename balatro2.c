@@ -100,8 +100,8 @@ struct Player{
 
 struct Player player[2] = {
     //Name       HP     ATK  IRON  Interest   RESTCOUNT  Battle Setup  Phase   Default turn amt   EquippedDefs INVENTORY & SPACE filled
-    {"Player 1", 1000,  5,   10,   2,         0,         {2,    2},    SETUP,  {2, 2},            {0},         {0},        0,          {0}},
-    {"Player 2", 1000,  5,   15,   3,         0,         {2,    2},    SETUP,  {2, 2},            {0},         {0},        0,          {0}}
+    {"Player 1", 1000,  5,   10,   1,         0,         {2,    2},    SETUP,  {2, 2},            {0},         {0},        0,          {0}},
+    {"Player 2", 1000,  5,   15,   1,         0,         {2,    2},    SETUP,  {2, 2},            {0},         {0},        0,          {0}}
 };
 struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
 //   ID    Name                         Type      Cost   Target   EffectType      Drawback            Chance   Positive Values    Negative Values
@@ -242,15 +242,15 @@ void clear(){ //Clear Terminal, purely cosmetic
 void FULLCARDPRINT(int p, enum MODE mode, struct CARD c[], int ccount){
     printf("%-6s%-40s%-15s%-85s", "ID", "Name", "Type", "Description");
     if (mode == SHOP){
-        printf("%-20s", "Iron Supplement Cost");
+        printf("%-20s", "Supplement Cost");
     }
-    printf("\n");
+    printf("\n\n");
     for (int i = 0; i < ccount; i++){
         printf("%-6i%-40s%-15s%-85s", c[i].id, c[i].name, carddesc[c[i].id - 1].type, carddesc[c[i].id - 1].desc);
         if (mode == SHOP){
             printf("%-20i", c[i].cost);
         }
-        printf("\n");
+        printf("\n\n");
     }
     return;
 }
@@ -345,7 +345,7 @@ int ATKf(int p, int opp){
             }
         }
         player[opp].hp -= dmg;
-        printf("Dealt %g damage! Your enemy now has %g hp. \n\n", dmg, player[opp].hp);
+        printf("Your enemy took %g damage! They have %g hp. \n\n", dmg, player[opp].hp);
     }
     else{
         printf("Invalid input dummy, im forcing you back to the menu \n\n");
@@ -678,8 +678,10 @@ int RESTf(int p){
     }
 }
 void Turn_End(int *p, int *opp){
+    player[*p].iron == 10;
+    printf("Passively gained 10 iron. \n\n");
     player[*p].turns[player[*p].current_phase]--;
-    //Decrease the turn counter on defence cards, only on battle turns
+    //Decrease the turn counter on player's defence cards, only on battle turns
     if (player[*p].equipdef.efftype == DEF_TURNS && player[*p].equipdef.id != 0 && player[*p].current_phase == BATTLE){
         player[*p].equipdef.addvalue--;
         printf("You defence card will expire in %i turns.\n", player[*p].equipdef.addvalue);
@@ -828,7 +830,6 @@ int main(){ //Main program loop
                     continue;
                 }
                 changeturn = true;
-                player[p].iron += 10;
                 break;
             case 2:
                 if (player[p].invspace == 0){
