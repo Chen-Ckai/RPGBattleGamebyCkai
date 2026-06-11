@@ -24,7 +24,6 @@ enum EFFECTTYPE {
     EFF_ATK,
     EFF_IRON,
     EFF_DEBUFF,
-    EFF_DEF,
     EFF_INTEREST,   // Accounting Masterclass
     EFF_STEAL_HP, 
     EFF_STEAL_IRON,
@@ -38,7 +37,7 @@ enum EFFECTTYPE {
     EFF_RESTCOUNT,
     EFF_SPECIAL,      //Jackpot, Go Fish, etc.
     DEF_HP,
-    DEF_TURNS,
+    DEF_HITS,
     DEF_SPECIAL
 };
 enum DRAWBACK{
@@ -72,7 +71,7 @@ struct CARD{
     float multvalue; 
     int db_addvalue;
     float db_multvalue;
-    //For defence cards, addvalue is the turn duration, multvalue is the hp, <------------------------------------
+    //For defence cards, addvalue is the hits left, multvalue is the hp, <------------------------------------
     //db is the dmg reduction (- dmg is addvalue, %dmg is multvalue)<---------------------- IMPORTANT READ IT ME PLEASE
 };
 
@@ -106,7 +105,7 @@ struct Player player[2] = {
 struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
 //   ID    Name                         Type      Cost   Target   EffectType      Drawback            Chance   Positive Values    Negative Values
     {1,   "Sharpening Stone",           COMMON,   2,     SELF,    EFF_ATK,        DB_NONE,            100,     5,        1.0,     0,        1.0},
-    {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_DEF,        DB_NONE,            100,     25,       1.0,     0,        1.0},
+    {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_SPECIAL,        DB_NONE,            100,     25,       1.0,     0,        1.0},
     {3,   "Banana Farm",                COMMON,   7,     SELF,    EFF_IRON,       DB_NONE,            100,     10,       1.1,     0,        1.0},
     {4,   "Baguette Farm",              COMMON,   7,     SELF,    EFF_ATK,        DB_NONE,            100,     10,       1.1,     0,        1.0},
     {5,   "Cheesecake Farm",            COMMON,   7,     SELF,    EFF_HP,         DB_NONE,            100,     10,       1.1,     0,        1.0},
@@ -123,19 +122,19 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {16,  "Prescription",               COMMON,   8,     SELF,    EFF_IRON,       DB_NONE,            100,     -1,       1.0,     0,        1.0},
     {17,  "Burn Out",                   COMMON,   19,    SELF,    EFF_IRON,       DB_SETUPTURNS,      100,     0,        2.0,     1,        1.0},
     {18,  "Investment",                 COMMON,   10,    SELF,    EFF_INTEREST,   DB_PBATTLETURNS,    100,     3,        1.0,     1,        1.0},
-    {19,  "Famine",                     COMMON,   10,    OPP,     EFF_DEBUFF,     DB_NONE,            100,     1,        1.0,     0,        1.0},
+    {19,  "Famine",                     COMMON,   10,    OPP,     EFF_DEBUFF,     DB_NONE,            75,      1,        1.0,     0,        1.0},
     {20,  "Bad Day",                    COMMON,   25,    SELF,    EFF_ATK,        DB_PBATTLETURNS,    100,     0,        3.0,     1,        1.0},
     {21,  "I have no enemies",          COMMON,   18,    SELF,    EFF_SETUPTURN,  DB_ATK,             100,     1,        1.0,     0,        0.75},
     //Defence cards
-    {22,  "Boiling Pot",                DEF,      15,    SELF,    DEF_TURNS,      DB_NONE,            100,     4,        1.0,     0,        0.1},
-    {23,  "Frying Pan",                 DEF,      15,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     20,       0.0},
-    {24,  "Strong Stance",              DEF,      75,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        0.5},
-    {25,  "Barrier",                    DEF,      150,   SELF,    DEF_TURNS,      DB_NONE,            100,     2,        1.0,     0,        0.0},
-    {26,  "Last Stand",                 DEF,      100,   SELF,    DEF_SPECIAL,    DB_NONE,            100,     6,        1.0,     0,        0.0},
-    {27,  "Mirror Force",               DEF,      47,    SELF,    DEF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        0.5},
-    {28,  "Glass shield",               DEF,      25,    SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
-    {29,  "Gluttony",                   DEF,      0,     SELF,    DEF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
-    {30,  "Trap card",                  DEF,      135,   SELF,    DEF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {22,  "Boiling Pot",                DEF,      15,    SELF,    DEF_HITS,       DB_NONE,            100,     4,        0.0,     0,        0.9},
+    {23,  "Frying Pan",                 DEF,      15,    SELF,    DEF_HP,         DB_NONE,            100,     0,        -1.0,    20,       0.0},
+    {24,  "Strong Stance",              DEF,      75,    SELF,    DEF_HP,         DB_NONE,            100,     0,        -1.0,    0,        0.5},
+    {25,  "Barrier",                    DEF,      150,   SELF,    DEF_HITS,       DB_NONE,            100,     2,        0.0,     0,        0.0},
+    {26,  "Last Stand",                 DEF,      100,   SELF,    DEF_HITS,       DB_NONE,            100,     10,       -1.0,    0,        0.0},
+    {27,  "Mirror Force",               DEF,      47,    SELF,    DEF_HITS,       DB_NONE,            100,     2,        0.0,     0,        0.5},
+    {28,  "PLaceholder",                DEF,      86,    SELF,    DEF_HP,         DB_NONE,            100},
+    {29,  "Gluttony",                   DEF,      0,     SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {30,  "Trap card",                  DEF,      135,   SELF,    DEF_HITS,       DB_NONE,            100,     1,        1.0,     0,        1.0},
     //Rare Cards
     {31,  "Oops, all 57 leaf clovers!", RARE,     157,   SELF,    EFF_SPECIAL,    DB_NONE,            100,     1,        1.0,     0,        1.0},
     {32,  "Irony",                      RARE,     0,     SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
@@ -173,18 +172,18 @@ struct CARDDESC carddesc[] = {
     {16, "Common", "Gain 10%% of the opponent's iron"},
     {17, "Common", "Sacrifice one set up turn for x1.75 attack"},
     {18, "Common", "Gain three more iron during interest gains, lose a battle turn"},
-    {19, "Common", "Add one stack of iron deficiency to your opponent"},
+    {19, "Common", "75%% chance to add one stack of iron deficiency to your opponent"},
     {20, "Common", "Gain x3 attack, lose a battle turn"},
     {21, "Common", "Gain a setup turn, lose 25%% of your attack"},
     //Defence cards
-    {22, "Defence", "Reduces damage taken by 20%%, lasts 4 battle turns"},
+    {22, "Defence", "Reduces damage taken by 20%%, lasts for 4 hits"},
     {23, "Defence", "Reduces damage taken by 20, has HP equal to 7%% of yours"},
-    {24, "Defence", "Reduces damage taken by 50%%, has HP equal to 30%% of yours"},
-    {25, "Defence", "For 2 turns, any and all oncoming damage is negated"},
-    {26, "Defence", "When equipped; HP is set to 1, oncoming damage is negated"},
-    {27, "Defence", "Reflect 50%% of any damage taken to your opponent for 2 battle turns"},
-    {28, "Defence", "One hit's damage is completely negated"},
-    {29, "Defence", "Any damage taken is converted to HP, has 100 HP"},
+    {24, "Defence", "Reduces damage taken by 50%%, has HP equal to 15%% of yours"},
+    {25, "Defence", "For the next 2 hits, any and all damage taken is negated"},
+    {26, "Defence", "When equipped; HP is set to 1, for 7 hits, all damage taken is negated"},
+    {27, "Defence", "Next 2 hits: 50%% of any damage taken is reflected to the opponent"},
+    {28, "Defence", "Placeholder"},
+    {29, "Defence", "10%% of any damage taken is turned into iron, has HP equal to 10%% of yours"},
     {30, "Defence", "For one hit, all damage is negated, and gain a turn in both phases"},
     //Rare cards
     {31, "Rare", "You are lucky."},
@@ -206,49 +205,32 @@ int Ran_100(){ //Random generation for all chance mechanics
 }
 
 //Generate a _____ card (based on the function)
-int Ran_Com(){
+int Ran_Com(){ //Common card
     return rand() % ccamt;
 }
-int Ran_Rar(){
+int Ran_Rar(){ //Rare card
     return rand() % rcamt + (ccamt + dcamt); //This makes sure it can only return rare card ids
 }
-int Ran_Def(){
+int Ran_Def(){ //Defence card
     return rand() % dcamt + ccamt;
 }
-int Ran_Sin(){
+int Ran_Sin(){ //Sincard
     //return rand() % lcamt + rcamt + ccamt + dcamt;
 }
-/*
-int FindCardIndex(int card_id) {
-    for (int i = 0; i < TOTAL_CARDS; i++) {
-        if (cards[i].id == card_id){
-            return i;
-        }
-    }
-    return -1;
-}
-int FindDescIndex(int card_id) {
-    for (int i = 0; i < TOTAL_CARDS; i++) {
-        if (carddesc[i].id == card_id) {
-            return i;
-        }
-    }
-    return -1;
-}
-*/
+
 void clear(){ //Clear Terminal, purely cosmetic
     printf("\e[1;1H\e[2J");
 }
 void FULLCARDPRINT(int p, enum MODE mode, struct CARD c[], int ccount){
     printf("%-6s%-40s%-15s%-85s", "ID", "Name", "Type", "Description");
     if (mode == SHOP){
-        printf("%-20s", "Supplement Cost");
+        printf("%s", "Supplement Cost");
     }
     printf("\n\n");
     for (int i = 0; i < ccount; i++){
         printf("%-6i%-40s%-15s%-85s", c[i].id, c[i].name, carddesc[c[i].id - 1].type, carddesc[c[i].id - 1].desc);
         if (mode == SHOP){
-            printf("%-20i", c[i].cost);
+            printf("%i", c[i].cost);
         }
         printf("\n\n");
     }
@@ -271,7 +253,6 @@ int CHOICECHECK(int p, enum MODE mode, struct CARD c[], int ccount){
             thiswasntoffered += 1;
         }
     }
-    clear();
     if (choice == 0){
         printf("Backed out. \n\n");
         return -2;
@@ -289,7 +270,7 @@ int CHOICECHECK(int p, enum MODE mode, struct CARD c[], int ccount){
         return -1;
     }
     else if (mode == SHOP && player[p].iron < cards[choice - 1].cost){
-        printf("Too broke for this lol, pick a card that you can afford \n\n");
+        printf("you'll die by buying this right now, your life depends on those iron supplements bro \n\n");
         return -1;
     }
     else{
@@ -313,35 +294,54 @@ int ATKf(int p, int opp){
         float dmg = player[p].atk;
         struct CARD def = player[opp].equipdef;
         if (def.id != 0){
+            printf("Your enemy's defence card, %s, activated! \n", cards[def.id - 1].name);
+            printf("Its effect: %s\n\n", carddesc[def.id - 1].desc);
             float def_dmg = dmg;
             float initial_dmg = dmg;
             dmg -= def.db_addvalue;
             dmg *= def.db_multvalue;
+            def_dmg = initial_dmg - dmg;
             if (dmg <= 0){
                 dmg = 0;
+                printf("their defence card negated all damage\n");
             }
-            def_dmg = initial_dmg - dmg;
-            printf("Your enemy's defence card, %s, activated! \n", cards[def.id - 1].name);
+            else{
+                printf("Their defence card negated %g damage\n\n", def_dmg);
+            }
+            switch (def.id - 1){
+                case 26:
+                    float reflect_dmg = dmg;
+                    player[p].hp -= reflect_dmg;
+                    printf("Your enemy's Mirror force reflected %g damage back at you\n\n", reflect_dmg);
+                    break;
+                case 27:
+                    player[opp].iron += 10;
+                    printf("Your enemy's *placeholder* converted 10 damage into iron. They gain 10 iron.\n\n");\
+                    break;
+                case 28:
+                    player[opp].hp += initial_dmg;
+                    printf("Your enemy's Gluttony absorbed the damage and healed them for %g HP.\n\n", initial_dmg);
+                    break;
+                case 29:
+            }
             switch (def.efftype){
                 //Only deduct hp if the type of def is HP
                 case DEF_HP:
                     player[opp].equipdef.multvalue -= def_dmg;
-                    printf("It is at %g hp.", player[opp].equipdef.multvalue);
+                    printf("It is at %g hp.\n\n", player[opp].equipdef.multvalue);
+                    if (player[opp].equipdef.multvalue <= 0){
+                        printf("Your enemy's defence card shattered!\n\n");
+                        player[p].equipdef.id = 0;
+                    }
                     break;
-                case DEF_SPECIAL:
-                    switch (def.id);
-                        case 27:
-                            float reflect_dmg = dmg;
-                            player[p].hp -= reflect_dmg;
-                            printf("Mirror force reflected %g damage back at you\n\n", reflect_dmg);
-                            break;
-                        case 29:
-                        case 30:
+                case DEF_HITS: 
+                    player[opp].equipdef.addvalue--;
+                    printf("It can take %i more hits\n\n", player[opp].equipdef.addvalue);
+                    if (player[opp].equipdef.addvalue <= 0){
+                        printf("Your enemy's defence card shattered!\n\n");
+                        player[p].equipdef.id = 0;
+                    }
                     break;
-            }
-            if (player[opp].equipdef.multvalue <= 0){
-                printf("Your enemy's defence card broke! \n\n");
-                player[opp].equipdef.id = 0;
             }
         }
         player[opp].hp -= dmg;
@@ -353,7 +353,7 @@ int ATKf(int p, int opp){
     }
     return 0;
 }
-
+// among us
 //any needed values when using cards
 int clovercount = 0;
 bool heavenrest = false;
@@ -468,13 +468,21 @@ int USECARDf(int p, int opp){
                     break;
                 case EFF_SPECIAL:
                     switch (useid){
-                        case 35:
+                        case 10:
+                            break;
+                        case 11: //Sin of greed
+                            player[targets[i]].turns[0] += addvalue;
+                            player[targets[i]].turns_def[0] += addvalue;
+                            player[targets[i]].turns[0] += addvalue;
+                            player[targets[i]].turns_def[0] += addvalue;
+                            break;
+                        case 35: //Jackpot
                             player[p].iron *= 7;
                             player[p].atk *= 7;
                             player[p].hp += 777;
                             printf("You just hit the JACKPOT!!! \n");
                             break;
-                        case 36:
+                        case 36: //Heavenly Restriction
                             player[p].atk *= 10;
                             player[p].iron = 0;
                             heavenrest = true;
@@ -483,14 +491,11 @@ int USECARDf(int p, int opp){
                             break;
                     }
                     break;
-                case DEF_SPECIAL:
-                    switch (useid){
-                        case 25:
-                            player[p].hp = 1;
-                            break;
-                    }
                 case DEF_HP:
-                case DEF_TURNS:
+                case DEF_HITS:
+                    if (useid == 25) {//Last stand check
+                        player[p].hp = 1;
+                    }
                     struct CARD empty;
                     player[p].equipdef = cards[useid];
                     for (int idx = 0; idx < player[p].invspace; idx++){
@@ -498,9 +503,7 @@ int USECARDf(int p, int opp){
                             player[p].cardinv[idx] = empty;
                         }
                     }
-                    printf("Equipped %s \n", cards[useid].name);
-                    printf("Card's effect: %s \n", carddesc[useid].desc);
-                    return 0;
+                    break;
                 default:
                     printf("Something went wrong mr coder\n");
             }
@@ -678,18 +681,9 @@ int RESTf(int p){
     }
 }
 void Turn_End(int *p, int *opp){
-    player[*p].iron == 10;
+    player[*p].iron += 10;
     printf("Passively gained 10 iron. \n\n");
     player[*p].turns[player[*p].current_phase]--;
-    //Decrease the turn counter on player's defence cards, only on battle turns
-    if (player[*p].equipdef.efftype == DEF_TURNS && player[*p].equipdef.id != 0 && player[*p].current_phase == BATTLE){
-        player[*p].equipdef.addvalue--;
-        printf("You defence card will expire in %i turns.\n", player[*p].equipdef.addvalue);
-        if (player[*p].equipdef.addvalue <= 0){
-            printf("Your defence card expired.\n\n");
-            player[*p].equipdef.id = 0;
-        }
-    }
     if (player[*p].turns[player[*p].current_phase] <= 0) {
         switch (player[*p].current_phase){
             case SETUP:
@@ -699,7 +693,6 @@ void Turn_End(int *p, int *opp){
                 player[*p].current_phase = SETUP;
                 int irongain = player[*p].ironinterest * (player[*p].iron / 5); //Calculate interest
                 player[*p].iron += irongain; //Calculate interest
-                clear();
                 printf("Since a cycle has passed, you've levelled up\n");
                 printf("Iron interest has been applied. You have gained %i iron supplements.\n", irongain);
                 break;
@@ -739,7 +732,7 @@ void Tutorial_Thomah(){
                 printf("(See cards for more information)\n");
                 getchar();
                 clear();
-                break;
+                break; //not ckai was here!!!! :)))))))) (Mr Zhang, this was a friend of mine, please pay him no attention)
             case 2:
                 
                 getchar();
@@ -878,7 +871,7 @@ int main(){ //Main program loop
         cards[15].addvalue = player[opp].iron / 10;  //Prescription's iron gain
         //Defence cards that need %based hp
         cards[22].multvalue = player[p].hp * 0.07;
-        cards[23].multvalue = player[p].hp * 0.3;
+        cards[23].multvalue = player[p].hp * 0.15;
         if (changeturn){
             Turn_End(&p, &opp);
         }
