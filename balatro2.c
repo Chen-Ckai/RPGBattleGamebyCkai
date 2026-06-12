@@ -88,7 +88,7 @@ struct Player{
     int iron;              // ALL CURRENCY MENTIONS ARE IN IRON SUPPLEMENTS
     int ironinterest;
     int consecutive_rest;
-    int turns[2];
+    int turns[2]; //[0] is battle, [1] is setup
     enum PHASE current_phase; 
     int turns_def[2];
     struct CARD equipdef;
@@ -103,9 +103,12 @@ struct Player player[2] = {
     {"Player 2", 1000,  5,   15,   1,         0,         {2,    2},    SETUP,  {2, 2},            {0},         {0},        0,          {0}}
 };
 struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
-//   ID    Name                         Type      Cost   Target   EffectType      Drawback            Chance   Positive Values    Negative Values
+//A few notes:
+//any negative values indicate an effect requiring stat values outside of the card's effect (ex. set atk to iron)
+//EFF_SPECIAL are any cards that can't fit into the main use card system
+//   ID    Name                         Type      Cost   Target   EffectType      Drawback          Chance   Good/benefit Values  Bad/drawback Values
     {1,   "Sharpening Stone",           COMMON,   2,     SELF,    EFF_ATK,        DB_NONE,            100,     5,        1.0,     0,        1.0},
-    {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_SPECIAL,        DB_NONE,            100,     25,       1.0,     0,        1.0},
+    {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_SPECIAL,    DB_NONE,            100,    -1,       -1.0,     0,        1.0},
     {3,   "Banana Farm",                COMMON,   7,     SELF,    EFF_IRON,       DB_NONE,            100,     10,       1.1,     0,        1.0},
     {4,   "Baguette Farm",              COMMON,   7,     SELF,    EFF_ATK,        DB_NONE,            100,     10,       1.1,     0,        1.0},
     {5,   "Cheesecake Farm",            COMMON,   7,     SELF,    EFF_HP,         DB_NONE,            100,     10,       1.1,     0,        1.0},
@@ -117,9 +120,9 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {11,  "Semi-consentual Robbery",    COMMON,   13,    OPP,     EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
     {12,  "Sin of Greed",               COMMON,   50,    SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     1,        1.0},
     {13,  "Yummy yummy in my tummy",    COMMON,   26,    SELF,    EFF_STEAL_HP,   DB_NONE,            100,     0,        0.05,    0,        1.0},
-    {14,  "Non-consentual Robbery",     COMMON,   20,    SELF,    EFF_STEAL_IRON, DB_NONE,            100,     10,       1.0,     0,        1.0},
+    {14,  "Non-consentual Robbery",     COMMON,   20,    SELF,    EFF_STEAL_IRON, DB_NONE,            100,     20,       1.0,     0,        1.0},
     {15,  "Anesthesia",                 COMMON,   12,    SELF,    EFF_RESTCOUNT,  DB_NONE,            100,     5,        1.0,     0,        1.0},
-    {16,  "Prescription",               COMMON,   8,     SELF,    EFF_IRON,       DB_NONE,            100,     -1,       1.0,     0,        1.0},
+    {16,  "Prescription",               COMMON,   8,     SELF,    EFF_IRON,       DB_NONE,            100,    -1,        1.0,     0,        1.0},
     {17,  "Burn Out",                   COMMON,   19,    SELF,    EFF_IRON,       DB_SETUPTURNS,      100,     0,        2.0,     1,        1.0},
     {18,  "Investment",                 COMMON,   10,    SELF,    EFF_INTEREST,   DB_PBATTLETURNS,    100,     3,        1.0,     1,        1.0},
     {19,  "Famine",                     COMMON,   10,    OPP,     EFF_DEBUFF,     DB_NONE,            75,      1,        1.0,     0,        1.0},
@@ -127,18 +130,19 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {21,  "I have no enemies",          COMMON,   18,    SELF,    EFF_SETUPTURN,  DB_ATK,             100,     1,        1.0,     0,        0.75},
     //Defence cards
     {22,  "Boiling Pot",                DEF,      15,    SELF,    DEF_HITS,       DB_NONE,            100,     4,        0.0,     0,        0.9},
-    {23,  "Frying Pan",                 DEF,      15,    SELF,    DEF_HP,         DB_NONE,            100,     0,        -1.0,    20,       0.0},
-    {24,  "Strong Stance",              DEF,      75,    SELF,    DEF_HP,         DB_NONE,            100,     0,        -1.0,    0,        0.5},
+    {23,  "Frying Pan",                 DEF,      15,    SELF,    DEF_HP,         DB_NONE,            100,     0,       -1.0,     20,       0.0},
+    {24,  "Strong Stance",              DEF,      75,    SELF,    DEF_HP,         DB_NONE,            100,     0,       -1.0,     0,        0.5},
+    //All defence cards past this point require special cases
     {25,  "Barrier",                    DEF,      150,   SELF,    DEF_HITS,       DB_NONE,            100,     2,        0.0,     0,        0.0},
-    {26,  "Last Stand",                 DEF,      100,   SELF,    DEF_HITS,       DB_NONE,            100,     10,       -1.0,    0,        0.0},
+    {26,  "Last Stand",                 DEF,      100,   SELF,    DEF_HITS,       DB_NONE,            100,     10,      -1.0,     0,        0.0},
     {27,  "Mirror Force",               DEF,      47,    SELF,    DEF_HITS,       DB_NONE,            100,     2,        0.0,     0,        0.5},
-    {28,  "PLaceholder",                DEF,      86,    SELF,    DEF_HP,         DB_NONE,            100},
+    {28,  "No Pain No Gain",            DEF,      86,    SELF,    DEF_HP,         DB_NONE,            100,     10,      -1.0},
     {29,  "Gluttony",                   DEF,      0,     SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
     {30,  "Trap card",                  DEF,      135,   SELF,    DEF_HITS,       DB_NONE,            100,     1,        1.0,     0,        1.0},
     //Rare Cards
     {31,  "Oops, all 57 leaf clovers!", RARE,     157,   SELF,    EFF_SPECIAL,    DB_NONE,            100,     1,        1.0,     0,        1.0},
-    {32,  "Irony",                      RARE,     0,     SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
-    {33,  "Tomato Tomato",              RARE,     50,    SELF,    EFF_SET_ATK,    DB_NONE,            100,     -1,       1.0,     0,        1.0},
+    {32,  "Irony",                      RARE,     0,     SELF,    EFF_SET_ATK,    DB_NONE,            100,    -1,        1.0,     0,        1.0},
+    {33,  "Tomato Tomato",              RARE,     50,    SELF,    EFF_SET_ATK,    DB_NONE,            100,    -1,        1.0,     0,        1.0},
     {34,  "Hail Mary",                  RARE,     75,    OPP,     EFF_SET_HP,     DB_NONE,            1,       0,        1.0,     0,        1.0},
     {35,  "Risky Business",             RARE,     93,    BOTH,    EFF_ATK,        DB_NONE,            100,     0,        1.0,     0,        5.0},
     {36,  "JACKPOT!!!!",                RARE,     0,     SELF,    EFF_SPECIAL,    DB_NONE,            7,       0,        1.0,     0,        1.0},
@@ -155,7 +159,7 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
 
 struct CARDDESC carddesc[] = {
     {1, "Common", "Gain 5 attack"},
-    {2, "Common", "Enemy's equipped defence card's HP by 25 (if possible)"},
+    {2, "Common", "Reduce enemy's equipped defence card's HP by 25/ hit count by 1"},
     {3, "Common", "Gain 10%% of your current iron + 10"},
     {4, "Common", "Gain 10%% of your current attack stat + 10"},
     {5, "Common", "Gain 10%% of your current hp + 10"},
@@ -435,6 +439,9 @@ int USECARDf(int p, int opp){
                     player[targets[1-i]].hp *= multvalue;
                     break;
                 case EFF_STEAL_IRON:
+                    if (player[targets[1-i]].iron < addvalue){
+                        addvalue = player[targets[1-i]].iron;
+                    }
                     player[targets[i]].iron += addvalue;
                     player[targets[i]].iron *= multvalue;
                     player[targets[1-i]].iron -= addvalue;
@@ -449,44 +456,66 @@ int USECARDf(int p, int opp){
                 case EFF_SET_ATK:
                     player[targets[i]].atk = addvalue;
                     break;
+                case EFF_PERMBTURNS:
+                    player[targets[i]].turns_def[0] += addvalue; //PERM also increases current turns, bleeds into next case to do so
                 case EFF_BATTLETURN:
                     player[targets[i]].turns[0] += addvalue;
                     break;
-                case EFF_SETUPTURN:
-                    player[targets[i]].turns[0] += addvalue;
-                    break;
-                case EFF_PERMBTURNS:
-                    player[targets[i]].turns[0] += addvalue;
-                    player[targets[i]].turns_def[0] += addvalue;
-                    break;
                 case EFF_PERMSTURNS:
-                    player[targets[i]].turns[0] += addvalue;
-                    player[targets[i]].turns_def[0] += addvalue;
+                    player[targets[i]].turns_def[1] += addvalue;
+                case EFF_SETUPTURN:
+                    player[targets[i]].turns[1] += addvalue;
                     break;
                 case EFF_RESTCOUNT:
                     player[targets[i]].consecutive_rest += addvalue;
                     break;
                 case EFF_SPECIAL:
                     switch (useid){
-                        case 10:
+                        case 1: //Fabric Softener
+                            switch (player[opp].equipdef.efftype){
+                                case DEF_HP:
+                                    player[opp].equipdef.multvalue -= 25;
+                                    break;
+                                case DEF_HITS:
+                                    player[opp].equipdef.addvalue--;
+                                    break;
+                            }
+                        case 10: //Favour
+                            struct CARD favourlist[10];
+                            for (int i = 0; i < 10; i++){
+                                if (player[opp].cardinv[i].id != 0){    
+                                    favourlist[i] = player[opp].cardinv[i];
+                                }
+                            }
+                            while (true){
+                                printf("%s, what card would you like to graciously donate?\n", player[opp].name);
+                                FULLCARDPRINT(p, INV, favourlist, 10);
+                                int choice = CHOICECHECK(p, INV, favourlist, 10);
+                                switch (choice){
+                                    case -1:
+
+                                }
+                            }
+                            
                             break;
                         case 11: //Sin of greed
-                            player[targets[i]].turns[0] += addvalue;
-                            player[targets[i]].turns_def[0] += addvalue;
-                            player[targets[i]].turns[0] += addvalue;
-                            player[targets[i]].turns_def[0] += addvalue;
+                            player[targets[i]].turns[0]++;
+                            player[targets[i]].turns_def[0]++;
+                            player[targets[i]].turns[1]++;
+                            player[targets[i]].turns_def[1]++;
                             break;
                         case 35: //Jackpot
                             player[p].iron *= 7;
                             player[p].atk *= 7;
                             player[p].hp += 777;
                             printf("You just hit the JACKPOT!!! \n");
-                            break;
+                            printf("Gained x7 iron, x7 attack, and +777 hp\n\n");
+                            return 0;
                         case 36: //Heavenly Restriction
                             player[p].atk *= 10;
                             player[p].iron = 0;
                             heavenrest = true;
-                            break;
+                            return 0;
                         default:
                             break;
                     }
@@ -547,14 +576,23 @@ int USECARDf(int p, int opp){
 }
 
 bool shopgend = false;
-struct CARD SHOPGEN(int i, int p, int ccount, int scardc, int rcardc, int ccardc, struct CARD tempc[]){
+struct CARD SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD tempc[]){
     int ran_g = 0;
     enum CARDTYPE gentype;
     if (i >= 6){
         gentype = DEF;
     }
     else {
-        gentype = COMMON;
+        int ran_t = Ran_100();
+        if (ran_t < *scardc){
+            gentype = SINCARD;
+        }
+        else if (ran_t < *rcardc){
+            gentype = RARE;
+        }
+        else {
+            gentype = COMMON;
+        }
     }
     int pool_start = 0;
     int pool_size = 0;
@@ -564,6 +602,11 @@ struct CARD SHOPGEN(int i, int p, int ccount, int scardc, int rcardc, int ccardc
             pool_size = dcamt;
             break;
         case SINCARD:
+            pool_start = ccamt+ rcamt + dcamt;
+            pool_size = scamt;
+            break;
+        default:
+            break;
     }
     int owned_count = 0;
     for (int idx = pool_start; idx < pool_start + pool_size; idx++) {
@@ -617,15 +660,39 @@ struct CARD SHOPGEN(int i, int p, int ccount, int scardc, int rcardc, int ccardc
     }
     tempc[i] = cards[ran_g];
 }
+int IronCommit(int p, int *rcardc, int *scardc){
+    printf("How much Iron would you like to commit (this increases the chances of rarer cards to appear): ");
+    int ironcommit;
+    scanf("%i", &ironcommit);
+    if (ironcommit < 0){
+        printf("You can't do that dummy\n\n");
+        return 1;
+    }
+    else if (ironcommit > player[p].iron){
+        printf("You'll die doing this, not a good idea.\n\n");
+        return -1;
+    }
+    else if (ironcommit == 0){
+        printf("ok\n\n");
+        return -1;
+    }
+    else{
+        printf("commited %i iron supplements.\n\n");
+        *rcardc = ironcommit;
+        *scardc = *rcardc / 10;
+        return 0;
+    }
+}
 int SHOPf(int p){
     clear();
     printf("=---------Welcome to the SHOP!----------=\n\n");
-    int ccardc = 100, rcardc = 0, scardc = rcardc/10; //Chance for each card to appear
+    int rcardc = 0, scardc = 0; //Chance for each card to appear
+    IronCommit(p, &rcardc, &scardc);
     int ccount = 8; //How many cards to generate
     int i = 0; 
     struct CARD tempc[ccount];
     while (i < ccount){
-        SHOPGEN(i, p, ccount, scardc, rcardc, ccardc, tempc);
+        SHOPGEN(i, p, ccount, &scardc, &rcardc, tempc);
         i++;
     }
     shopgend = true; //The shop has generated, don't generate anymore
