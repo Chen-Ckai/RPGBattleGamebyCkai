@@ -108,7 +108,7 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
 //EFF_SPECIAL are any cards that can't fit into the main use card system
 //   ID    Name                         Type      Cost   Target   EffectType      Drawback          Chance   Good/benefit Values  Bad/drawback Values
     {1,   "Sharpening Stone",           COMMON,   2,     SELF,    EFF_ATK,        DB_NONE,            100,     5,        1.0,     0,        1.0},
-    {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_SPECIAL,    DB_NONE,            100,    -1,       -1.0,     0,        1.0},
+    {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_SPECIAL,    DB_NONE,            100,     0,        0,       1,        25.0},
     {3,   "Banana Farm",                COMMON,   7,     SELF,    EFF_IRON,       DB_NONE,            100,     10,       1.1,     0,        1.0},
     {4,   "Baguette Farm",              COMMON,   7,     SELF,    EFF_ATK,        DB_NONE,            100,     10,       1.1,     0,        1.0},
     {5,   "Cheesecake Farm",            COMMON,   7,     SELF,    EFF_HP,         DB_NONE,            100,     10,       1.1,     0,        1.0},
@@ -117,7 +117,7 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {8,   "Double Edged Sword",         COMMON,   15,    SELF,    EFF_ATK,        DB_HP,              100,     15,       1.0,     15,       1.0},
     {9,   "Accounting Masterclass",     COMMON,   15,    SELF,    EFF_INTEREST,   DB_NONE,            100,     1,        1.0,     0,        0.9},
     {10,  "Wheel of Fortune",           COMMON,   5,     SELF,    EFF_ATK,        DB_NONE,            25,      0,        1.25,    0,        1.0},
-    {11,  "Semi-consentual Robbery",    COMMON,   13,    OPP,     EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {11,  "Scalper",                    COMMON,   36,    SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
     {12,  "Sin of Greed",               COMMON,   50,    SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     1,        1.0},
     {13,  "Yummy yummy in my tummy",    COMMON,   26,    SELF,    EFF_STEAL_HP,   DB_NONE,            100,     0,        0.05,    0,        1.0},
     {14,  "Non-consentual Robbery",     COMMON,   20,    SELF,    EFF_STEAL_IRON, DB_NONE,            100,     20,       1.0,     0,        1.0},
@@ -168,7 +168,7 @@ struct CARDDESC carddesc[] = {
     {8, "Common", "Sacrifice 15 hp for 15 attack"},
     {9, "Common", "Gain an additional iron during interest, lose 10%% of your iron"},
     {10, "Common", "25%% chance to gain x1.25 attack"},
-    {11, "Common", "Gain a card from your opponent of their choice"},
+    {11, "Common", "Take a random card from your opponent"},
     {12, "Common", "Gain a turn in both phases"},
     {13, "Common", "Gain 5%% of your opponent's hp"},
     {14, "Common", "Steal 10 iron fron your opponent"},
@@ -415,6 +415,8 @@ int USECARDf(int p, int opp){
     if (100 - cards[useid].procchance < Ran_100()){
         int addvalue = cards[useid].addvalue;
         float multvalue = cards[useid].multvalue + clovercount;
+        int db_addvalue = cards[useid].db_addvalue;
+        float db_multvalue = cards[useid].db_multvalue;
         for (int i = 0; i < targetcount; i++){
             switch (cards[useid].efftype){
                 case EFF_HP:
@@ -471,16 +473,21 @@ int USECARDf(int p, int opp){
                     break;
                 case EFF_SPECIAL:
                     switch (useid){
-                        case 1: //Fabric Softener
+                        case 1:                                    //Fabric Softener
                             switch (player[opp].equipdef.efftype){
                                 case DEF_HP:
-                                    player[opp].equipdef.multvalue -= 25;
+                                    player[opp].equipdef.multvalue -= db_multvalue;
                                     break;
                                 case DEF_HITS:
-                                    player[opp].equipdef.addvalue--;
+                                    player[opp].equipdef.addvalue -= db_addvalue;
                                     break;
                             }
-                        case 10: //Favour
+                        case 10:                                    //Scalper
+                            if (player[opp].invspace <= 0){
+                                printf("Your enemy has no cards to donate\n\n");
+                                return 0;
+                            }
+                            player[p].cardinv[p_useid].id = 0;
                             struct CARD favourlist[10];
                             for (int i = 0; i < 10; i++){
                                 if (player[opp].cardinv[i].id != 0){    
@@ -488,34 +495,34 @@ int USECARDf(int p, int opp){
                                 }
                             }
                             while (true){
-                                printf("%s, what card would you like to graciously donate?\n", player[opp].name);
-                                FULLCARDPRINT(p, INV, favourlist, 10);
-                                int choice = CHOICECHECK(p, INV, favourlist, 10);
-                                switch (choice){
-                                    case -1:
-
+                                int ran_g = Ran_100() % 10;
+                                if (player[opp].cardinv[ran_g].id != 0){
+                                    player[p].cardinv[p_useid] = player[opp].cardinv[ran_g];
                                 }
                             }
-                            
-                            break;
-                        case 11: //Sin of greed
+                            printf("Scalper stole the card %s from the opponent\n\n");
+                            return 0;
+                        case 11:                           //Sin of greed
                             player[targets[i]].turns[0]++;
                             player[targets[i]].turns_def[0]++;
                             player[targets[i]].turns[1]++;
                             player[targets[i]].turns_def[1]++;
                             break;
-                        case 35: //Jackpot
+                        case 30:                           //Clover
+                            clovercount++;
+                            break;
+                        case 35:                            //Jackpot
                             player[p].iron *= 7;
                             player[p].atk *= 7;
                             player[p].hp += 777;
                             printf("You just hit the JACKPOT!!! \n");
                             printf("Gained x7 iron, x7 attack, and +777 hp\n\n");
                             return 0;
-                        case 36: //Heavenly Restriction
+                        case 36:                           //Heavenly Restriction
                             player[p].atk *= 10;
                             player[p].iron = 0;
                             heavenrest = true;
-                            return 0;
+                            break;
                         default:
                             break;
                     }
@@ -576,41 +583,52 @@ int USECARDf(int p, int opp){
 }
 
 bool shopgend = false;
-struct CARD SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD tempc[]){
+void SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD tempc[]){
     int ran_g = 0;
     enum CARDTYPE gentype;
+    
     if (i >= 6){
+        // The last two shop slots are defence cards guarantee
         gentype = DEF;
     }
     else {
         int ran_t = Ran_100();
-        if (ran_t < *scardc){
+        
+        // If pointers hold >= 100, bypass the RNG roll entirely to fulfill the iron guarantee
+        if (*scardc > 0 && (ran_t <= *scardc || *scardc >= 100)){
             gentype = SINCARD;
         }
-        else if (ran_t < *rcardc){
+        else if (*rcardc > 0 && (ran_t <= *rcardc || *rcardc >= 100)){
             gentype = RARE;
         }
         else {
             gentype = COMMON;
         }
     }
+    
     int pool_start = 0;
     int pool_size = 0;
     switch (gentype){
-        case DEF:
-            pool_start = ccamt; // Defense cards start right after common cards
-            pool_size = dcamt;
+        case COMMON:  
+            pool_start = 0; 
+            pool_size = ccamt; 
             break;
-        case SINCARD:
-            pool_start = ccamt+ rcamt + dcamt;
-            pool_size = scamt;
+        case DEF:     
+            pool_start = ccamt; 
+            pool_size = dcamt; 
             break;
-        default:
+        case RARE:    
+            pool_start = ccamt + dcamt; 
+            pool_size = rcamt; 
+            break;
+        case SINCARD: 
+            pool_start = ccamt + dcamt + rcamt; 
+            pool_size = scamt; 
             break;
     }
+    
     int owned_count = 0;
     for (int idx = pool_start; idx < pool_start + pool_size; idx++) {
-        // Check if player owns this card
         for (int b = 0; b < 10; b++) {
             if (player[p].cardinv[b].id == cards[idx].id) {
                 owned_count++;
@@ -618,37 +636,36 @@ struct CARD SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct C
             }
         }
     }
-    // If the player owns every single card in this category, break out early
+    
+    // Fallback if the user owns the entire generated tier
     if (owned_count >= pool_size) {
-        //Any card that can't generate is replaced with a common
         gentype = COMMON;
     }
+    
     bool is_duplicate = true;
     while (is_duplicate){
         switch (gentype){
-            //Generate card based on the rarity
-            case COMMON:
-                ran_g = Ran_Com();
+            case COMMON:  
+                ran_g = Ran_Com(); 
                 break;
-            case RARE:
-                ran_g = Ran_Rar();
+            case RARE:    
+                ran_g = Ran_Rar(); 
                 break;
-            case SINCARD:
-                ran_g = Ran_Sin();
+            case SINCARD: 
+                ran_g = Ran_Sin(); 
                 break;
-            case DEF:
-                ran_g = Ran_Def();
+            case DEF:     
+                ran_g = Ran_Def(); 
                 break;
         }
-        //Check for duplicates in shop pool
+        
         is_duplicate = false;
         for (int a = 0; a < i; a++) {
             if (tempc[a].id == cards[ran_g].id) {
-                is_duplicate = true; //Stop everything
+                is_duplicate = true; 
                 break; 
             }
         }
-        //Make sure the card isn't in your inventory
         if (!is_duplicate) {
             for (int b = 0; b < 10; b++){
                 if (player[p].cardinv[b].id == cards[ran_g].id){
@@ -658,44 +675,83 @@ struct CARD SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct C
             }
         }
     }
+    
+    // Deduct exactly 100 points safely AFTER the item passes all duplicate validation checks
+    if (gentype == SINCARD) {
+        *scardc -= 100;
+        if (*scardc < 0) {
+            *scardc = 0;
+        }
+    }
+    else if (gentype == RARE) {
+        *rcardc -= 100;
+        if (*rcardc < 0) {
+            *rcardc = 0;
+        }
+        // Keep scardc aligned with the remaining rare budget tier
+        *scardc = *rcardc / 10; 
+    }
+    
     tempc[i] = cards[ran_g];
 }
 int IronCommit(int p, int *rcardc, int *scardc){
-    printf("How much Iron would you like to commit (this increases the chances of rarer cards to appear): ");
-    int ironcommit;
-    scanf("%i", &ironcommit);
-    if (ironcommit < 0){
-        printf("You can't do that dummy\n\n");
-        return 1;
-    }
-    else if (ironcommit > player[p].iron){
-        printf("You'll die doing this, not a good idea.\n\n");
-        return -1;
-    }
-    else if (ironcommit == 0){
-        printf("ok\n\n");
-        return -1;
-    }
-    else{
-        printf("commited %i iron supplements.\n\n");
-        *rcardc = ironcommit;
-        *scardc = *rcardc / 10;
-        return 0;
+    printf("How much iron would you like to commit? \n");
+    printf("(Enter -1 to go back to the menu)\n");
+    int comamt;
+    scanf("%i", &comamt);
+    getchar();
+    switch (comamt){
+        case 0:
+            printf("Ok, no rare cards for you i guess\n");
+            getchar();
+            clear();
+            return 0;
+        case -1:
+            printf("Returning to menu\n");
+            getchar();
+            clear();
+            return -1;
+        default:
+            if (comamt < 0){
+                printf("you cannot commit a negative amount stupid go back to the menu\n");
+                return -2;
+            }
+            else {
+                printf("Committed %i iron. \n", comamt);
+                *rcardc = comamt;
+                *scardc = *rcardc / 10;
+                return comamt;
+            }
     }
 }
+// 3. FIXED SHOP INTERFACE FUNCTION
 int SHOPf(int p){
     clear();
     printf("=---------Welcome to the SHOP!----------=\n\n");
-    int rcardc = 0, scardc = 0; //Chance for each card to appear
-    IronCommit(p, &rcardc, &scardc);
-    int ccount = 8; //How many cards to generate
-    int i = 0; 
-    struct CARD tempc[ccount];
-    while (i < ccount){
-        SHOPGEN(i, p, ccount, &scardc, &rcardc, tempc);
-        i++;
+    int rcardc = 0, scardc = 0; 
+    int comamt = IronCommit(p, &rcardc, &scardc);
+    
+    // If player backs out or inputs invalid options, exit cleanly to the menu
+    switch (comamt){
+        case 0:
+            break;
+        case -1:
+            return -1;
+        case -2:
+            return -1;
+        default:
+            break;
     }
-    shopgend = true; //The shop has generated, don't generate anymore
+    
+    int ccount = 8; //How many cards will generate in the shop
+    struct CARD tempc[8];
+    
+    // Generate shop items into the tempc array
+    for (int i = 0; i < ccount; i++){
+        SHOPGEN(i, p, ccount, &scardc, &rcardc, tempc);
+    }
+    
+    shopgend = true; 
     int choice = 0;
     while (true){
         printf("You have %i iron supplements at the moment\n\n", player[p].iron);
@@ -703,22 +759,23 @@ int SHOPf(int p){
         FULLCARDPRINT(p, SHOP, tempc, ccount);
         printf("\n");
         choice = CHOICECHECK(p, SHOP, tempc, ccount);
+        
         switch (choice){
             case -1:
                 break;
             case -2:
                 return -1;
             default:
-                for (int i = 0; i < 10; i++) { // Always check all 10 slots
-                    if (player[p].cardinv[i].id == 0) { // Found a physically empty slot!
-                        choice--; //0 indexing
-                        player[p].cardinv[i] = cards[choice]; // Save the card to the empty slot
-                        player[p].iron -= cards[choice].cost;  // Pay the iron cost
-                        player[p].invspace++;                 // Increment total tracked cards
+                for (int i = 0; i < 10; i++) { 
+                    if (player[p].cardinv[i].id == 0) { 
+                        choice--; // Convert back to 0-indexing
+                        player[p].cardinv[i] = cards[choice]; 
+                        player[p].iron -= cards[choice].cost;  
+                        player[p].invspace++;                 
                         
                         printf("Bought %s!\n\n", cards[choice].name);
                         printf("Card's effect: %s \n\n", carddesc[choice].desc);
-                        return 0; // Exit the shop function successfully!
+                        return 0; 
                     }
                 }
         }
