@@ -113,7 +113,7 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
 //any negative values indicate an effect requiring stat values outside of the card's effect (ex. set atk to iron)
 //EFF_SPECIAL are any cards that can't fit into the main use card system
 //   ID    Name                         Type      Cost   Target   EffectType      Drawback          Chance   Good/benefit Values  Bad/drawback Values
-    {1,   "Sharpening Stone",           COMMON,   2,     SELF,    EFF_ATK,        DB_NONE,            100,     5,        1.0,     0,        1.0},
+    {1,   "Sharpening Stone",           COMMON,   3,     SELF,    EFF_ATK,        DB_NONE,            100,     5,        1.0,     0,        1.0},
     {2,   "Fabric Softener",            COMMON,   10,    OPP,     EFF_SPECIAL,    DB_NONE,            100,     0,        0,       1,        25.0},
     {3,   "Banana Farm",                COMMON,   7,     SELF,    EFF_IRON,       DB_NONE,            100,     10,       1.1,     0,        1.0},
     {4,   "Baguette Farm",              COMMON,   7,     SELF,    EFF_ATK,        DB_NONE,            100,     10,       1.1,     0,        1.0},
@@ -125,7 +125,7 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {10,  "Wheel of Fortune",           COMMON,   5,     SELF,    EFF_ATK,        DB_NONE,            25,      0,        1.25,    0,        1.0},
     {11,  "Scalper",                    COMMON,   36,    SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
     {12,  "Sin of Greed",               COMMON,   50,    SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     1,        1.0},
-    {13,  "Yummy yummy in my tummy",    COMMON,   26,    SELF,    EFF_STEAL_HP,   DB_NONE,            100,     0,        0.05,    0,        1.0},
+    {13,  "Yummy yummy in my tummy",    COMMON,   26,    SELF,    EFF_STEAL_HP,   DB_NONE,            100,     25,       1.0,     0,        1.0},
     {14,  "Non-consentual Robbery",     COMMON,   20,    SELF,    EFF_STEAL_IRON, DB_NONE,            100,     20,       1.0,     0,        1.0},
     {15,  "Anesthesia",                 COMMON,   12,    SELF,    EFF_RESTCOUNT,  DB_NONE,            100,     5,        1.0,     0,        1.0},
     {16,  "Prescription",               COMMON,   8,     SELF,    EFF_IRON,       DB_NONE,            100,    -1,        1.0,     0,        1.0},
@@ -155,14 +155,23 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {35,  "Risky Business",             RARE,     93,    BOTH,    EFF_ATK,        DB_NONE,            100,     0,        5.0,     0,        5.0},
     {36,  "JACKPOT!!!!",                RARE,     0,     SELF,    EFF_SPECIAL,    DB_NONE,            7,       0,        1.0,     0,        1.0},
     {37,  "Heavenly Restriction",       RARE,     1,     SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        10.0,    0,        1.0},
+    {38,  "Mutual Assured Destruction", RARE,     235,   SELF,    EFF_ATK,        DB_HP,              100,     500,      1.0,     400,      1.0},
+    {39,  "Go Fish",                    RARE,     125,   OPP,     EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {40,  "Trolley Problem",            RARE,     55,    SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        2.0,     0,        0.5},
+    {41,  "Pay to Win",                 RARE,     50,    SELF,    EFF_ATK,        DB_IRON,            100,    -1,        1.0,    -1,        1.0},
+    {42,  "Pot of Greed",               RARE,     200,   SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     1,        1.0},
+    {43,  "Goose Encounter",            RARE,     52,    OPP,     EFF_IRON,       DB_IRON,            100,     0,        1.0,     5,        0.7},
+    {44,  "I forgot",                   RARE,     48,    SELF,    EFF_SPECIAL,    DB_NONE,            100,     0,        1.0,     0,        1.0},
+    {45,  "God of Destruction",         RARE,     124,   SELF,    EFF_PERMBTURNS, DB_NONE,            100,     3,        1.0,     0,        1.0},
+    {46,  "Yoinky Sploinky",            RARE,     120,   SELF,    EFF_STEAL_IRON, DB_NONE,            100,     0,        1.5,     0,        0.5},
     //Sincards
-    {41,  "Main Character Syndrome",    SINCARD,  400,   SELF,    EFF_SPECIAL},
-    {42,  "Oops, all 3249 leaf clovers!",SINCARD, 400,   SELF,    EFF_SPECIAL},
+    {47,  "Main Character Syndrome",    SINCARD,  400,   SELF,    EFF_SPECIAL},
+    {48,  "Oops, all 3249 leaf clovers!",SINCARD, 400,   SELF,    EFF_SPECIAL},
 };
-#define ccamt 21
-#define rcamt 7
-#define scamt 2
-#define dcamt 9
+#define NUMCOMMONCARD 21
+#define NUMRARECARD 7
+#define NUMSINCARD 2
+#define NUMDEFENDCARD 9
 #define TOTAL_CARDS (sizeof(cards) / sizeof(cards[0]))
 
 struct CARDDESC carddesc[] = {
@@ -178,8 +187,8 @@ struct CARDDESC carddesc[] = {
     {10, "Common", "25%% chance to gain x1.25 attack"},
     {11, "Common", "Take a random card from your opponent"},
     {12, "Common", "Gain a turn in both phases"},
-    {13, "Common", "Gain 5%% of your opponent's hp"},
-    {14, "Common", "Steal 10 iron fron your opponent"},
+    {13, "Common", "Gain 25 of your opponent's hp"},
+    {14, "Common", "Steal 20 iron fron your opponent"},
     {15, "Common", "Increase consecutive rest count by 5"},
     {16, "Common", "Gain 10%% of the opponent's iron"},
     {17, "Common", "Sacrifice one set up turn for x1.75 attack"},
@@ -224,16 +233,16 @@ int Ran_100(){ //Random generation for all chance mechanics
 
 //Generate a _____ card (based on the function)
 int Ran_Com(){ //Common card
-    return rand() % ccamt;
+    return rand() % NUMCOMMONCARD;
 }
 int Ran_Rar(){ //Rare card
-    return rand() % rcamt + (ccamt + dcamt); //This makes sure it can only return rare card ids
+    return rand() % NUMRARECARD + (NUMCOMMONCARD + NUMDEFENDCARD); //This makes sure it can only return rare card ids
 }
 int Ran_Def(){ //Defence card
-    return rand() % dcamt + ccamt; //This makes sure it can only return def card ids
+    return rand() % NUMDEFENDCARD + NUMCOMMONCARD; //This makes sure it can only return def card ids
 }
 int Ran_Sin(){ //Sincard
-    //return rand() % lcamt + rcamt + ccamt + dcamt;
+    //return rand() % NUMSINCARD + NUMRARECARD + NUMCOMMONCARD + NUMDEFENDCARD;
 }
 
 void clear(){ //Clear Terminal, purely cosmetic
@@ -343,7 +352,7 @@ int ATKf(int p, int opp){
                     break;
                 case 28:
                     player[opp].iron += 10;
-                    printf("Your enemy's No Pain No Gain converted 10 damage into iron. They gain 10 iron.\n\n");\
+                    printf("Your enemy's No Pain No Gain converted 10 damage into iron. They gain 10 iron.\n\n");
                     break;
                 case 29:
                     player[opp].hp += initial_dmg;
@@ -358,7 +367,7 @@ int ATKf(int p, int opp){
                     printf("It is at %g hp.\n\n", player[opp].equipdef.multvalue);
                     if (player[opp].equipdef.multvalue <= 0){
                         printf("Your enemy's defence card shattered!\n\n");
-                        player[p].equipdef.id = 0;
+                        player[opp].equipdef.id = 0;
                     }
                     break;
                 case DEF_HITS: 
@@ -366,7 +375,7 @@ int ATKf(int p, int opp){
                     printf("It can take %i more hits\n\n", player[opp].equipdef.addvalue);
                     if (player[opp].equipdef.addvalue <= 0){
                         printf("Your enemy's defence card shattered!\n\n");
-                        player[p].equipdef.id = 0;
+                        player[opp].equipdef.id = 0;
                     }
                     break;
             }
@@ -397,9 +406,9 @@ int USECARDf(int p, int opp){
     int useid;
     bool choicecont = true;
     while (choicecont){
-        FULLCARDPRINT(p, INV, tempc, player[p].invspace);
+        FULLCARDPRINT(p, INV, tempc, tempc_i);
         printf("\n");
-        enum SUCCESSPARITY status= CHOICECHECK(p, INV, tempc, player[p].invspace, &useid);
+        enum SUCCESSPARITY status = CHOICECHECK(p, INV, tempc, tempc_i, &useid);
         switch (status){
             case INVALID:
                 break;
@@ -456,11 +465,14 @@ int USECARDf(int p, int opp){
                 case EFF_INTEREST:
                     player[targets[i]].ironinterest += addvalue;
                     break;
+                
+
+                /////Issue with stealing effects!!!!!
                 case EFF_STEAL_HP:
-                    player[targets[i]].hp += addvalue;
-                    player[targets[i]].hp *= multvalue;
-                    player[targets[1-i]].hp -= addvalue;
-                    player[targets[1-i]].hp *= multvalue;
+                    player[opp].hp -= addvalue;
+                    player[opp].hp *= multvalue;
+                    player[p].hp += addvalue;
+                    player[p].hp *= multvalue;
                     break;
                 case EFF_STEAL_IRON:
                     if (player[targets[1-i]].iron < addvalue){
@@ -562,11 +574,10 @@ int USECARDf(int p, int opp){
                     if (useid == 25) {//Last stand check
                         player[p].hp = 1;
                     }
-                    struct CARD empty;
                     player[p].equipdef = cards[useid];
                     for (int idx = 0; idx < player[p].invspace; idx++){
                         if (player[p].equipdef.id - 1 == player[p].cardinv[idx].id){
-                            player[p].cardinv[idx] = empty;
+                            player[p].cardinv[idx].id = 0;
                         }
                     }
                     break;
@@ -641,19 +652,19 @@ void SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD sho
     switch (gentype){
         case COMMON:  
             pool_start = 0; 
-            pool_size = ccamt; 
+            pool_size = NUMCOMMONCARD; 
             break;
         case DEF:     
-            pool_start = ccamt; 
-            pool_size = dcamt; 
+            pool_start = NUMCOMMONCARD; 
+            pool_size = NUMDEFENDCARD; 
             break;
         case RARE:    
-            pool_start = ccamt + dcamt; 
-            pool_size = rcamt; 
+            pool_start = NUMCOMMONCARD + NUMDEFENDCARD; 
+            pool_size = NUMRARECARD; 
             break;
         case SINCARD: 
-            pool_start = ccamt + dcamt + rcamt; 
-            pool_size = scamt; 
+            pool_start = NUMCOMMONCARD + NUMDEFENDCARD + NUMRARECARD; 
+            pool_size = NUMSINCARD; 
             break;
     }
     
@@ -820,7 +831,7 @@ int SHOPf(int p){
                     }
                 }
             case REROLL:
-                int reroll_cost = 5 + (2 * reroll_count);
+                int reroll_cost = 5 + (5 * reroll_count);
                 printf("It will cost %i iron to reroll the shop. Is this ok? (y/n)\n\n", reroll_cost);
                 char yn;
                 scanf(" %c", &yn);
@@ -872,7 +883,10 @@ int RESTf(int p){
         printf("You have rested. \n");
         // Iron = interest + rest count * total iron / 5
         int irongain = (player[p].ironinterest + player[p].consecutive_rest) * (player[p].iron / 5);
-        player[p].iron += irongain;\
+        if (irongain <= 0){
+            irongain = 1;
+        }
+        player[p].iron += irongain;
         if (player[p].consecutive_rest < 2){
             player[p].consecutive_rest++;
         }
@@ -961,9 +975,9 @@ int main(){ //Main program loop
     int opp = 1;
     cards[15].addvalue = player[opp].iron / 10;  //Prescription's iron gain
     //Defence cards that need %based hp
-    cards[22].multvalue = player[p].hp * 0.07;
-    cards[23].multvalue = player[p].hp * 0.3;
-    cards[27].multvalue = player[p].hp * 0.1;
+    cards[22].multvalue = player[p].hp * 0.07; //Frying pan
+    cards[23].multvalue = player[p].hp * 0.3;  //Strong stance
+    cards[27].multvalue = player[p].hp * 0.1;  //No pain no gain
     //Rare cards
     cards[31].addvalue = player[opp].iron;
     cards[32].addvalue = player[p].hp / 10;
