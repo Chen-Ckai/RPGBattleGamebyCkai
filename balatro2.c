@@ -58,6 +58,12 @@ enum PHASE{
     BATTLE,
     SETUP
 };
+enum SUCCESSPARITY{
+    SUCCESS,
+    INVALID,
+    BACKED,
+    REROLL
+};
 struct CARD{
     int id;
     char name[40];
@@ -129,16 +135,16 @@ struct CARD cards[] = {  //COMPLETE DATABASE OF EVERY CARD IN THE GAME
     {20,  "Bad Day",                    COMMON,   25,    SELF,    EFF_ATK,        DB_PBATTLETURNS,    100,     0,        3.0,     1,        1.0},
     {21,  "I have no enemies",          COMMON,   18,    SELF,    EFF_SETUPTURN,  DB_ATK,             100,     1,        1.0,     0,        0.75},
     //Defence cards
-    {22,  "Boiling Pot",                DEF,      15,    SELF,    DEF_HITS,       DB_NONE,            100,     4,        0.0,     0,        0.9},
+    {22,  "Boiling Pot",                DEF,      15,    SELF,    DEF_HITS,       DB_NONE,            100,     4,        0.0,     0,        0.8},
     {23,  "Frying Pan",                 DEF,      15,    SELF,    DEF_HP,         DB_NONE,            100,     0,       -1.0,     20,       0.0},
     {24,  "Strong Stance",              DEF,      75,    SELF,    DEF_HP,         DB_NONE,            100,     0,       -1.0,     0,        0.5},
-    //All defence cards past this point require special cases
     {25,  "Barrier",                    DEF,      150,   SELF,    DEF_HITS,       DB_NONE,            100,     2,        0.0,     0,        0.0},
+    //All defence cards past this point require special cases
     {26,  "Last Stand",                 DEF,      100,   SELF,    DEF_HITS,       DB_NONE,            100,     10,      -1.0,     0,        0.0},
     {27,  "Mirror Force",               DEF,      47,    SELF,    DEF_HITS,       DB_NONE,            100,     2,        0.0,     0,        0.5},
-    {28,  "No Pain No Gain",            DEF,      86,    SELF,    DEF_HP,         DB_NONE,            100,     10,      -1.0},
-    {29,  "Gluttony",                   DEF,      0,     SELF,    DEF_HP,         DB_NONE,            100,     0,        1.0,     0,        1.0},
-    {30,  "Trap card",                  DEF,      135,   SELF,    DEF_HITS,       DB_NONE,            100,     1,        1.0,     0,        1.0},
+    {28,  "No Pain No Gain",            DEF,      86,    SELF,    DEF_HP,         DB_NONE,            100,     10,      -1.0,     0,        1.0},
+    {29,  "Gluttony",                   DEF,      215,   SELF,    DEF_HITS,       DB_NONE,            100,     3,        1.0,     0,        0.0},
+    {30,  "Trap card",                  DEF,      135,   SELF,    DEF_HITS,       DB_NONE,            100,     1,        1.0,     0,        0.0},
     //Rare Cards
     {31,  "Oops, all 57 leaf clovers!", RARE,     157,   SELF,    EFF_SPECIAL,    DB_NONE,            100,     1,        1.0,     0,        1.0},
     {32,  "Irony",                      RARE,     0,     SELF,    EFF_SET_ATK,    DB_NONE,            100,    -1,        1.0,     0,        1.0},
@@ -186,8 +192,8 @@ struct CARDDESC carddesc[] = {
     {25, "Defence", "For the next 2 hits, any and all damage taken is negated"},
     {26, "Defence", "When equipped; HP is set to 1, for 7 hits, all damage taken is negated"},
     {27, "Defence", "Next 2 hits: 50%% of any damage taken is reflected to the opponent"},
-    {28, "Defence", "Placeholder"},
-    {29, "Defence", "10%% of any damage taken is turned into iron, has HP equal to 10%% of yours"},
+    {28, "Defence", "10 damage is negated turned into iron, has HP equal to 10%% of yours"},
+    {29, "Defence", "Any damage is absorbed and turned to HP, lasts for 3 hits"},
     {30, "Defence", "For one hit, all damage is negated, and gain a turn in both phases"},
     //Rare cards
     {31, "Rare", "You are lucky."},
@@ -204,6 +210,12 @@ struct CARDDESC carddesc[] = {
     {44, "Sincardnate", "EXODIA...  OBLITERATE!!!!!!"},
 };
 
+//Special global variables
+int clovercount = 0;
+bool heavenrest = false;
+bool shop_needs_refresh = true; 
+
+
 int Ran_100(){ //Random generation for all chance mechanics
     return rand() % 100 + 1;
 }
@@ -216,7 +228,7 @@ int Ran_Rar(){ //Rare card
     return rand() % rcamt + (ccamt + dcamt); //This makes sure it can only return rare card ids
 }
 int Ran_Def(){ //Defence card
-    return rand() % dcamt + ccamt;
+    return rand() % dcamt + ccamt; //This makes sure it can only return def card ids
 }
 int Ran_Sin(){ //Sincard
     //return rand() % lcamt + rcamt + ccamt + dcamt;
@@ -241,12 +253,22 @@ void FULLCARDPRINT(int p, enum MODE mode, struct CARD c[], int ccount){
     return;
 }
 
-int CHOICECHECK(int p, enum MODE mode, struct CARD c[], int ccount){
-    printf("Please enter the ID of the card you'd like to select:\n");
-    printf("(Enter 0 if you want to go back)\n");
+int CHOICECHECK(int p, enum MODE mode, struct CARD c[], int ccount, int *out_choice){
+    printf("Please enter the ID of the card you'd like to select\n");
+    printf("Enter -1 if you want to go back to the menu\n");
+    if (mode == SHOP){
+        printf("Or, if would like to reroll the shop, enter 0\n");
+    }
     int choice;
     scanf("%i", &choice);
     getchar();
+    if (choice == -1){
+        printf("Backed out. \n\n");
+        return BACKED;
+    }
+    else if (choice == 0 && mode == SHOP){
+        return REROLL;
+    }
     bool douownthis = false;
     int thiswasntoffered = 0;
     for (int i = 0; i < ccount; i++){
@@ -257,28 +279,26 @@ int CHOICECHECK(int p, enum MODE mode, struct CARD c[], int ccount){
             thiswasntoffered += 1;
         }
     }
-    if (choice == 0){
-        printf("Backed out. \n\n");
-        return -2;
-    }
-    else if (choice < 1 || choice > TOTAL_CARDS){
+    
+    if (choice < 1 || choice > TOTAL_CARDS){
         printf("How do you miss the mark that much dude, that isn't even a card in the game \n\n");
-        return -1;
+        return INVALID;
     }
     else if (!douownthis && mode != SHOP){
         printf("You don't own this. Please pick a card that you actually own.\n\n");
-        return -1;
+        return INVALID;
     }
     else if (thiswasntoffered == 0){
         printf("This card isn't in the collection shown dumdum \n\n");
-        return -1;
+        return INVALID;
     }
     else if (mode == SHOP && player[p].iron < cards[choice - 1].cost){
         printf("you'll die by buying this right now, your life depends on those iron supplements bro \n\n");
-        return -1;
+        return INVALID;
     }
     else{
-        return choice;
+        *out_choice = choice;
+        return SUCCESS;
     }
 }
 
@@ -291,7 +311,7 @@ int ATKf(int p, int opp){
     clear();
     if (choice == 'n'){
         printf("ok\n\n");
-        return -1;
+        return BACKED;
     }
     else if (choice == 'y'){
         printf("ok\n\n");
@@ -312,21 +332,22 @@ int ATKf(int p, int opp){
             else{
                 printf("Their defence card negated %g damage\n\n", def_dmg);
             }
-            switch (def.id - 1){
-                case 26:
+            getchar();
+            switch (def.id){
+                case 27:
                     float reflect_dmg = dmg;
                     player[p].hp -= reflect_dmg;
                     printf("Your enemy's Mirror force reflected %g damage back at you\n\n", reflect_dmg);
                     break;
-                case 27:
-                    player[opp].iron += 10;
-                    printf("Your enemy's *placeholder* converted 10 damage into iron. They gain 10 iron.\n\n");\
-                    break;
                 case 28:
+                    player[opp].iron += 10;
+                    printf("Your enemy's No Pain No Gain converted 10 damage into iron. They gain 10 iron.\n\n");\
+                    break;
+                case 29:
                     player[opp].hp += initial_dmg;
                     printf("Your enemy's Gluttony absorbed the damage and healed them for %g HP.\n\n", initial_dmg);
                     break;
-                case 29:
+                case 30:
             }
             switch (def.efftype){
                 //Only deduct hp if the type of def is HP
@@ -348,19 +369,17 @@ int ATKf(int p, int opp){
                     break;
             }
         }
+        getchar();
         player[opp].hp -= dmg;
         printf("Your enemy took %g damage! They have %g hp. \n\n", dmg, player[opp].hp);
     }
     else{
         printf("Invalid input dummy, im forcing you back to the menu \n\n");
-        return -1;
+        return INVALID;
     }
-    return 0;
+    return SUCCESS;
 }
-// among us
-//any needed values when using cards
-int clovercount = 0;
-bool heavenrest = false;
+
 int USECARDf(int p, int opp){
     clear();
     printf("This action will allow you to use a card.\n");
@@ -374,18 +393,21 @@ int USECARDf(int p, int opp){
         }
     }
     int useid;
-    while (true){
+    bool choicecont = true;
+    while (choicecont){
         FULLCARDPRINT(p, INV, tempc, player[p].invspace);
         printf("\n");
-        useid = CHOICECHECK(p, INV, tempc, player[p].invspace);
-        if (useid == -1){
-            continue;
-        }
-        else if(useid == -2){
-            return -1;
-        }
-        else{
-            break;
+        enum SUCCESSPARITY status= CHOICECHECK(p, INV, tempc, player[p].invspace, &useid);
+        getchar();
+        clear();
+        switch (status){
+            case INVALID:
+                break;
+            case BACKED:
+                return BACKED;
+            default:
+                choicecont = false;
+                break;
         }
     }
     useid--; //0 indexing
@@ -472,8 +494,8 @@ int USECARDf(int p, int opp){
                     player[targets[i]].consecutive_rest += addvalue;
                     break;
                 case EFF_SPECIAL:
-                    switch (useid){
-                        case 1:                                    //Fabric Softener
+                    switch (cards[useid].id){
+                        case 2:                                    //Fabric Softener
                             switch (player[opp].equipdef.efftype){
                                 case DEF_HP:
                                     player[opp].equipdef.multvalue -= db_multvalue;
@@ -481,44 +503,49 @@ int USECARDf(int p, int opp){
                                 case DEF_HITS:
                                     player[opp].equipdef.addvalue -= db_addvalue;
                                     break;
+                                default:
+                                    printf("The enemy doesn't have a defence card equipped\n\n");
+                                    getchar();
+                                    clear();
+                                    return -1;
                             }
-                        case 10:                                    //Scalper
+                            break;
+                        case 11:                                    //Scalper
                             if (player[opp].invspace <= 0){
                                 printf("Your enemy has no cards to donate\n\n");
-                                return 0;
+                                return -1;
                             }
                             player[p].cardinv[p_useid].id = 0;
-                            struct CARD favourlist[10];
-                            for (int i = 0; i < 10; i++){
-                                if (player[opp].cardinv[i].id != 0){    
-                                    favourlist[i] = player[opp].cardinv[i];
-                                }
-                            }
+                            player[p].invspace--;
                             while (true){
-                                int ran_g = Ran_100() % 10;
-                                if (player[opp].cardinv[ran_g].id != 0){
-                                    player[p].cardinv[p_useid] = player[opp].cardinv[ran_g];
+                                int scalpran = rand() % 10;
+                                if (player[opp].cardinv[scalpran].id != 0){
+                                    player[p].cardinv[p_useid] = player[opp].cardinv[scalpran];
+                                    player[opp].cardinv[scalpran].id = 0;
+                                    player[p].invspace++;
+                                    player[opp].invspace--;
+                                    break;
                                 }
                             }
-                            printf("Scalper stole the card %s from the opponent\n\n");
+                            printf("Scalper stole the card %s from the opponent\n\n", player[p].cardinv[p_useid].name);
                             return 0;
-                        case 11:                           //Sin of greed
+                        case 12:                           //Sin of greed
                             player[targets[i]].turns[0]++;
                             player[targets[i]].turns_def[0]++;
                             player[targets[i]].turns[1]++;
                             player[targets[i]].turns_def[1]++;
                             break;
-                        case 30:                           //Clover
+                        case 31:                           //Clover
                             clovercount++;
                             break;
-                        case 35:                            //Jackpot
+                        case 36:                            //Jackpot
                             player[p].iron *= 7;
                             player[p].atk *= 7;
                             player[p].hp += 777;
                             printf("You just hit the JACKPOT!!! \n");
                             printf("Gained x7 iron, x7 attack, and +777 hp\n\n");
                             return 0;
-                        case 36:                           //Heavenly Restriction
+                        case 37:                           //Heavenly Restriction
                             player[p].atk *= 10;
                             player[p].iron = 0;
                             heavenrest = true;
@@ -579,22 +606,20 @@ int USECARDf(int p, int opp){
         printf("Your card failed the performance check lol \n\n");
         player[p].cardinv[p_useid].id = 0;
     }
-    return 0;
+    return SUCCESS;
 }
 
-bool shopgend = false;
-void SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD tempc[]){
+void SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD shop_cards[]){
     int ran_g = 0;
     enum CARDTYPE gentype;
     
     if (i >= 6){
-        // The last two shop slots are defence cards guarantee
+        //Last two cards in the shop must be defence
         gentype = DEF;
     }
     else {
         int ran_t = Ran_100();
         
-        // If pointers hold >= 100, bypass the RNG roll entirely to fulfill the iron guarantee
         if (*scardc > 0 && (ran_t <= *scardc || *scardc >= 100)){
             gentype = SINCARD;
         }
@@ -636,8 +661,6 @@ void SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD tem
             }
         }
     }
-    
-    // Fallback if the user owns the entire generated tier
     if (owned_count >= pool_size) {
         gentype = COMMON;
     }
@@ -661,7 +684,7 @@ void SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD tem
         
         is_duplicate = false;
         for (int a = 0; a < i; a++) {
-            if (tempc[a].id == cards[ran_g].id) {
+            if (shop_cards[a].id == cards[ran_g].id) {
                 is_duplicate = true; 
                 break; 
             }
@@ -676,111 +699,119 @@ void SHOPGEN(int i, int p, int ccount, int *scardc, int *rcardc, struct CARD tem
         }
     }
     
-    // Deduct exactly 100 points safely AFTER the item passes all duplicate validation checks
-    if (gentype == SINCARD) {
-        *scardc -= 100;
-        if (*scardc < 0) {
-            *scardc = 0;
-        }
+    switch (gentype){
+        case SINCARD:
+            *scardc -= 100;
+            if (*scardc < 0) {
+                *scardc = 0;
+            }
+            break;
+        case RARE:
+            *rcardc -= 100;
+            if (*rcardc < 0) {
+                *rcardc = 0;
+            }
+            *scardc = *rcardc / 10; 
+            break;
     }
-    else if (gentype == RARE) {
-        *rcardc -= 100;
-        if (*rcardc < 0) {
-            *rcardc = 0;
-        }
-        // Keep scardc aligned with the remaining rare budget tier
-        *scardc = *rcardc / 10; 
-    }
-    
-    tempc[i] = cards[ran_g];
+    //slot the chosen card into the shop array
+    shop_cards[i] = cards[ran_g];
 }
 int IronCommit(int p, int *rcardc, int *scardc){
-    printf("How much iron would you like to commit? \n");
-    printf("(Enter -1 to go back to the menu)\n");
+    printf("How much iron would you like to commit?\n");
+    printf("(Enter -1 to return to the main menu)\n");
     int comamt;
     scanf("%i", &comamt);
     getchar();
     switch (comamt){
-        case 0:
-            printf("Ok, no rare cards for you i guess\n");
-            getchar();
-            clear();
-            return 0;
         case -1:
-            printf("Returning to menu\n");
-            getchar();
-            clear();
-            return -1;
+            printf("Backed out \n\n");
+            return BACKED;
         default:
             if (comamt < 0){
-                printf("you cannot commit a negative amount stupid go back to the menu\n");
-                return -2;
+                printf("You can't do that\n\n");
+                getchar();
+                clear();
+                return INVALID;
             }
-            else {
-                printf("Committed %i iron. \n", comamt);
-                *rcardc = comamt;
-                *scardc = *rcardc / 10;
+            else if (comamt > player[p].iron){
+                printf("Doing this will kill you, your life depends on these supplements man\n\n");
+                getchar();
+                clear();
+                return INVALID;
+            }
+            else{
+                
+                printf("Committed %i iron.\n\n", comamt);
+                getchar();
+                clear();
                 return comamt;
             }
     }
 }
-// 3. FIXED SHOP INTERFACE FUNCTION
 int SHOPf(int p){
     clear();
     printf("=---------Welcome to the SHOP!----------=\n\n");
-    int rcardc = 0, scardc = 0; 
-    int comamt = IronCommit(p, &rcardc, &scardc);
-    
-    // If player backs out or inputs invalid options, exit cleanly to the menu
-    switch (comamt){
-        case 0:
-            break;
-        case -1:
-            return -1;
-        case -2:
-            return -1;
-        default:
-            break;
-    }
-    
-    int ccount = 8; //How many cards will generate in the shop
-    struct CARD tempc[8];
-    
-    // Generate shop items into the tempc array
-    for (int i = 0; i < ccount; i++){
-        SHOPGEN(i, p, ccount, &scardc, &rcardc, tempc);
-    }
-    
-    shopgend = true; 
-    int choice = 0;
+    //Static struct array, keeps the shop intact 
+    static struct CARD shop_cards[8];
+    int ccount = 8; 
     while (true){
+        if (shop_needs_refresh) { //Does the shop need to refresh?
+            int rcardc = 0, scardc = 0; 
+            int comamt = IronCommit(p, &rcardc, &scardc);
+            switch (comamt){
+                case INVALID:
+                case BACKED:
+                    return BACKED;
+                default:
+                    break;
+            }
+            //Generate new cards
+            for (int i = 0; i < ccount; i++){
+                SHOPGEN(i, p, ccount, &scardc, &rcardc, shop_cards);
+            }
+            shop_needs_refresh = false;
+        } 
+        else {
+            printf("[!] Retrieving available items from your previous shop visit...\n\n");
+        }
         printf("You have %i iron supplements at the moment\n\n", player[p].iron);
         printf("Here are your options: \n");
-        FULLCARDPRINT(p, SHOP, tempc, ccount);
+        FULLCARDPRINT(p, SHOP, shop_cards, ccount);
         printf("\n");
-        choice = CHOICECHECK(p, SHOP, tempc, ccount);
-        
-        switch (choice){
-            case -1:
+        int c_choice; //Real card id
+
+        //Status of the choicecheck
+        enum SUCCESSPARITY status = CHOICECHECK(p, SHOP, shop_cards, ccount, &c_choice);
+        switch (status){
+            case INVALID:
+                getchar();
+                clear();
                 break;
-            case -2:
-                return -1;
-            default:
+            case BACKED:
+                return BACKED;
+            case REROLL:
+                printf("Shop has been rerolled.\n\n");
+                getchar();
+                clear();
+                shop_needs_refresh = true;
+                break;
+            case SUCCESS:
+                c_choice--; //Zero indexing
                 for (int i = 0; i < 10; i++) { 
                     if (player[p].cardinv[i].id == 0) { 
-                        choice--; // Convert back to 0-indexing
-                        player[p].cardinv[i] = cards[choice]; 
-                        player[p].iron -= cards[choice].cost;  
+                        player[p].cardinv[i] = cards[c_choice]; 
+                        player[p].iron -= cards[c_choice].cost;  
                         player[p].invspace++;                 
-                        
-                        printf("Bought %s!\n\n", cards[choice].name);
-                        printf("Card's effect: %s \n\n", carddesc[choice].desc);
-                        return 0; 
+                        printf("Bought %s!\n\n", cards[c_choice].name);
+                        printf("Card's effect: %s \n\n", carddesc[c_choice].desc);
+                        return SUCCESS; 
                     }
                 }
+                break;
         }
     }
-    return 0;
+    return SUCCESS;
 }
 int RESTf(int p){
     printf("This action will make you rest. You are currently at %i consecutive rests. \n", player[p].consecutive_rest);
@@ -790,23 +821,25 @@ int RESTf(int p){
     getchar();
     if (choice == 'n'){
         printf("ok \n");
-        return -1;
+        return BACKED;
     }
     else if (choice == 'y'){
         printf("You have rested. \n");
         int irongain = player[p].ironinterest * (player[p].iron / 5);
         float hpgain = player[p].hp * 0.05;
         printf("Gained %i iron and %g hp", irongain, hpgain);
-        return 0;
+        return SUCCESS;
     }
     else {
         printf("dude i gave you a clear choice \n");
-        return -1;
+        return INVALID;
     }
 }
 void Turn_End(int *p, int *opp){
-    player[*p].iron += 10;
-    printf("Passively gained 10 iron. \n\n");
+    getchar();
+    shop_needs_refresh = true; //If a turn-ending action occurs, refresh the shop
+    player[*p].iron += 5;
+    printf("Performed an action. Passively gained 5 iron. \n\n");
     player[*p].turns[player[*p].current_phase]--;
     if (player[*p].turns[player[*p].current_phase] <= 0) {
         switch (player[*p].current_phase){
@@ -883,6 +916,7 @@ int main(){ //Main program loop
     //Defence cards that need %based hp
     cards[22].multvalue = player[p].hp * 0.07;
     cards[23].multvalue = player[p].hp * 0.3;
+    cards[27].multvalue = player[p].hp * 0.1;
     clear();
     printf("Welcome to Not Generic RPG Roguelike game\n");
     printf("Would you like to view the tutorial? (y/n)\n");
@@ -943,19 +977,21 @@ int main(){ //Main program loop
                     printf("You cannot attack now, it is the set up phase right now \n\n");
                     continue;
                 }
-                else if (ATKf(p, opp) == -1){
-                    continue;
+                switch (ATKf(p, opp)){
+                    case SUCCESS:
+                        changeturn = true;
+                        break;
+                    case INVALID:
+                    case BACKED:
+                        continue;
                 }
-                changeturn = true;
                 break;
             case 2:
                 if (player[p].invspace == 0){
                     printf("You don't have any cards to use idiot.\n\n");
                     continue;
                 }
-                else if (USECARDf(p, opp) == -1){
-                    continue;
-                }
+                USECARDf(p, opp);
                 continue;
             case 3:
                 if (player[p].invspace == 0){
@@ -970,11 +1006,15 @@ int main(){ //Main program loop
                     printf("You don't have any room to buy more cards\n");
                     continue;
                 }
-                else if (SHOPf(p) != -1){
-                    changeturn = true;
-                    break;
+                switch (SHOPf(p)){
+                    case SUCCESS:
+                        changeturn = true;
+                        break;
+                    case INVALID:
+                    case BACKED:
+                        continue;
                 }
-                continue;
+                break;
             case 5:
                 printf("Display your stats\n");
                 continue;
